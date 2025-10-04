@@ -1,0 +1,21 @@
+{
+  "name": "tiktok-scraper-ui",
+  "version": "1.0.0",
+  "description": "Web UI for TikTok Scraper",
+  "main": "server.ts",
+  "scripts": {
+    "dev": "bun --hot server.ts",
+    "start": "bun server.ts",
+    "build": "bun build server.ts --outdir ./dist"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "@types/bun": "latest"
+  },
+  "type": "module"
+}

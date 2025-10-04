@@ -1,0 +1,166 @@
+import { program } from "commander";
+import { discover } from "./discover";
+import { readFileSync } from "fs";
+import { hashtag } from "./hashtag";
+import type { CliOptions } from "../interfaces/cliOptions";
+
+// This establishes the CLI and defines the args
+program
+  .name("Scraper")
+  .description("TikTok discover feed scraper")
+  .requiredOption(
+    "-l, --limitPerQuery <number>",
+    "number of items to scrape per query (1-500)",
+    (value) => {
+      const parsed = parseInt(value, 10);
+      if (isNaN(parsed) || parsed < 1 || parsed > 500) {
+        throw new Error("limitPerQuery must be an integer between 1 and 500");
+      }
+      return parsed;
+    },
+  )
+  .requiredOption(
+    "-q, --query <query>",
+    "search query: string, comma-separated strings, or JSON file path",
+    (value) => {
+      if (value.endsWith(".json")) {
+        try {
+          const fileContent = readFileSync(value, "utf8");
+          const parsed = JSON.parse(fileContent);
+          if (
+            !Array.isArray(parsed) ||
+            !parsed.every((item) => typeof item === "string")
+          ) {
+            throw new Error("JSON file must contain an array of strings");
+          }
+          return parsed;
+        } catch (error) {
+          throw new Error(`Failed to read JSON file: ${error}`);
+        }
+      }
+
+      if (value.includes(",")) {
+        return value
+          .split(",")
+          .map((s) => s.trim())
+          .map((s) => s.replace(/^#/, ""))
+          .filter((s) => s.length > 0);
+      }
+
+      return [value.trim().replace(/^#/, "")];
+    },
+  )
+  .requiredOption(
+    "--removeNonEnglish <boolean>",
+    "remove non-English content",
+    (value) => {
+      if (value === "true") return true;
+      if (value === "false") return false;
+      throw new Error("removeNonEnglish must be either true or false");
+    },
+  )
+  .requiredOption(
+    "--minFollowers <number>",
+    "minimum number of followers",
+    (value) => {
+      const parsed = parseInt(value, 10);
+      if (isNaN(parsed) || parsed < 0) {
+        throw new Error("minFollowers must be a non-negative integer");
+      }
+      return parsed;
+    },
+  )
+  .requiredOption(
+    "--minVideoViews <number>",
+    "minimum video views",
+    (value) => {
+      const parsed = parseInt(value, 10);
+      if (isNaN(parsed) || parsed < 0) {
+        throw new Error("minVideoViews must be a non-negative integer");
+      }
+      return parsed;
+    },
+  )
+  .requiredOption(
+    "--minAvgViews <number>",
+    "minimum average views",
+    (value) => {
+      const parsed = parseInt(value, 10);
+      if (isNaN(parsed) || parsed < 0) {
+        throw new Error("minAvgViews must be a non-negative integer");
+      }
+      return parsed;
+    },
+  )
+  .requiredOption(
+    "--videoLimitPerProfile <number>",
+    "video limit per profile",
+    (value) => {
+      const parsed = parseInt(value, 10);
+      if (isNaN(parsed) || parsed < 1) {
+        throw new Error("videoLimitPerProfile must be a positive integer");
+      }
+      return parsed;
+    },
+  )
+  .requiredOption(
+    "--includePinnedVideos <boolean>",
+    "include pinned videos",
+    (value) => {
+      if (value === "true") return true;
+      if (value === "false") return false;
+      throw new Error("includePinnedVideos must be either true or false");
+    },
+  )
+  .requiredOption(
+    "--timeWindowInDays <number>",
+    "time window in days",
+    (value) => {
+      const parsed = parseInt(value, 10);
+      if (isNaN(parsed) || parsed < 1) {
+        throw new Error("timeWindowInDays must be a positive integer");
+      }
+      return parsed;
+    },
+  )
+  .requiredOption(
+    "--minNoOfVideosInWindow <number>",
+    "minimum number of videos in time window",
+    (value) => {
+      const parsed = parseInt(value, 10);
+      if (isNaN(parsed) || parsed < 0) {
+        throw new Error("minNoOfVideosInWindow must be a non-negative integer");
+      }
+      return parsed;
+    },
+  )
+  .requiredOption(
+    "-t, --type <type>",
+    "scraper type: discover or hashtag",
+    (value) => {
+      if (value !== "discover" && value !== "hashtag") {
+        throw new Error("type must be either discover or hashtag");
+      }
+      return value;
+    },
+  )
+  .action(async (options: CliOptions) => {
+    console.log(
+      `Starting ${options.type} scraper, scrapping ${options.limitPerQuery} items for queries:`,
+      options.query,
+    );
+
+    switch (options.type) {
+      case "hashtag":
+        await hashtag(options);
+        break;
+      case "discover":
+        await discover(options);
+        break;
+      default:
+        throw new Error("Invalid scraper type");
+    }
+  });
+
+// Starts the program proper
+program.parse();
