@@ -12,12 +12,13 @@ import type { CliOptions } from "../interfaces/cliOptions";
 import type { DiscoverResponse } from "../interfaces/discover";
 import type { HashtagResponse } from "../interfaces/hashtag";
 import type { GoodQuality } from "../interfaces/qualityDeterminant";
+import type { ExploreResponse } from "../interfaces/explore";
 
 // Both discover and hashtags result in roughly the same data so this is just an abstracted util for both
 export async function postProcess(
   config: any,
   options: CliOptions,
-  dataset: HashtagResponse | DiscoverResponse,
+  dataset: HashtagResponse | DiscoverResponse | ExploreResponse,
 ) {
   // build the quality config
   const qualityConfig: GoodQuality = {

@@ -1,4 +1,4 @@
-type ScraperType = "discover" | "hashtag";
+type ScraperType = "discover" | "hashtag" | "explore";
 
 export interface CliOptions {
   limitPerQuery: number;

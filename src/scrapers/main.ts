@@ -3,6 +3,8 @@ import { discover } from "./discover";
 import { readFileSync } from "fs";
 import { hashtag } from "./hashtag";
 import type { CliOptions } from "../interfaces/cliOptions";
+import { explore } from "./explore";
+import { validExploreCalues } from "../utils/explore";
 
 // This establishes the CLI and defines the args
 program
@@ -136,10 +138,10 @@ program
   )
   .requiredOption(
     "-t, --type <type>",
-    "scraper type: discover or hashtag",
+    "scraper type: discover or hashtag or explore",
     (value) => {
-      if (value !== "discover" && value !== "hashtag") {
-        throw new Error("type must be either discover or hashtag");
+      if (value !== "discover" && value !== "hashtag" && value !== "explore") {
+        throw new Error("type must be either discover or hashtag or explore");
       }
       return value;
     },
@@ -150,12 +152,21 @@ program
       options.query,
     );
 
+    if (options.type === "explore") {
+      if (options.query.some((query) => !validExploreCalues.includes(query))) {
+        throw new Error("Invalid explore query, valid values are: " + validExploreCalues.join(", "));
+      }
+    }
+
     switch (options.type) {
       case "hashtag":
         await hashtag(options);
         break;
       case "discover":
         await discover(options);
+        break;
+      case "explore":
+        await explore(options);
         break;
       default:
         throw new Error("Invalid scraper type");
