@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync, statSync } from "fs";
 import path from "path";
-import { RunData } from "../types";
+import type { RunData } from "../types";
 
 interface PipelineStats {
   extracted: number;
@@ -32,7 +32,7 @@ export class DataService {
     const allFiles: RunData[] = [];
 
     // Read from both discover and hashtag directories
-    const directories = ["discover", "hashtag"];
+    const directories = ["discover", "hashtag", "explore"];
 
     for (const dir of directories) {
       try {
@@ -75,7 +75,7 @@ export class DataService {
 
   getRunData(timestamp: string) {
     // Try both discover and hashtag directories
-    const directories = ["discover", "hashtag"];
+    const directories = ["discover", "hashtag", "explore"];
 
     for (const dir of directories) {
       try {
@@ -158,7 +158,7 @@ export class DataService {
     const allStats: PipelineStats[] = [];
 
     // Get stats for all runs
-    const directories = ["discover", "hashtag"];
+    const directories = ["discover", "hashtag", "explore"];
     
     for (const dir of directories) {
       try {

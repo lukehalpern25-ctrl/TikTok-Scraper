@@ -136,7 +136,7 @@ export function Dashboard({ onNavigateToExplorer }: DashboardProps = {}) {
       </div>
 
       {/* Scraper Type Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Hashtag Scraper</CardTitle>
@@ -192,6 +192,37 @@ export function Dashboard({ onNavigateToExplorer }: DashboardProps = {}) {
               <div>
                 <div className="text-2xl font-bold text-purple-600 mb-1">
                   {getStatsForType("discover").avgPerRun}
+                </div>
+                <div className="text-xs text-slate-500">Avg/Run</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Explore Scraper</CardTitle>
+            <CardDescription>
+              Statistics for explore topics scraping
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold text-blue-600 mb-1">
+                  {getStatsForType("explore").runs}
+                </div>
+                <div className="text-xs text-slate-500">Runs</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-green-600 mb-1">
+                  {getStatsForType("explore").creators}
+                </div>
+                <div className="text-xs text-slate-500">Creators</div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-purple-600 mb-1">
+                  {getStatsForType("explore").avgPerRun}
                 </div>
                 <div className="text-xs text-slate-500">Avg/Run</div>
               </div>
@@ -269,10 +300,20 @@ export function Dashboard({ onNavigateToExplorer }: DashboardProps = {}) {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant={run.metadata?.options?.type === "discover" ? "secondary" : "default"}>
+                          <Badge 
+                            variant={
+                              run.metadata?.options?.type === "discover" 
+                                ? "secondary" 
+                                : run.metadata?.options?.type === "explore"
+                                  ? "outline"
+                                  : "default"
+                            }
+                          >
                             {run.metadata?.options?.type === "discover"
                               ? "Discover"
-                              : "Hashtag"}
+                              : run.metadata?.options?.type === "explore"
+                                ? "Explore"
+                                : "Hashtag"}
                           </Badge>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

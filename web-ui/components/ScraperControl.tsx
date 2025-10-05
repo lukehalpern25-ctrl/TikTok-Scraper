@@ -31,9 +31,11 @@ import {
   Download,
   Trash2,
   RotateCcw,
+  X,
 } from "lucide-react";
+import { validExploreValues, exploreValueLabels } from "../utils/exploreValues";
 
-type ScraperType = "discover" | "hashtag";
+type ScraperType = "discover" | "hashtag" | "explore";
 
 interface ScraperConfig {
   // Basic config
@@ -155,6 +157,10 @@ export function ScraperControl() {
   // Load saved configs when scraper type changes
   useEffect(() => {
     setSavedConfigs(getSavedConfigs(config.type));
+    // Clear queryInput when switching to explore type
+    if (config.type === "explore") {
+      setQueryInput("");
+    }
   }, [config.type]);
 
   const loadStatus = async () => {
@@ -244,11 +250,16 @@ export function ScraperControl() {
   const restoreConfig = (savedConfig: SavedConfig) => {
     const restoredConfig = loadConfigFromLocalStorage(savedConfig);
     setConfig(restoredConfig);
-    setQueryInput(
-      restoredConfig.query.length > 0
-        ? JSON.stringify(restoredConfig.query, null, 2)
-        : "",
-    );
+    // Only set queryInput for non-explore types
+    if (restoredConfig.type !== "explore") {
+      setQueryInput(
+        restoredConfig.query.length > 0
+          ? JSON.stringify(restoredConfig.query, null, 2)
+          : "",
+      );
+    } else {
+      setQueryInput("");
+    }
   };
 
   const stopScraper = async () => {
@@ -336,13 +347,13 @@ export function ScraperControl() {
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Scraper Type
               </label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Button
                   type="button"
                   variant={config.type === "hashtag" ? "default" : "outline"}
                   className="h-auto p-4 flex-col"
                   onClick={() =>
-                    setConfig((prev) => ({ ...prev, type: "hashtag" }))
+                    setConfig((prev) => ({ ...prev, type: "hashtag", query: [] }))
                   }
                 >
                   <div className="text-lg font-semibold mb-1">Hashtag</div>
@@ -353,72 +364,149 @@ export function ScraperControl() {
                   variant={config.type === "discover" ? "default" : "outline"}
                   className="h-auto p-4 flex-col"
                   onClick={() =>
-                    setConfig((prev) => ({ ...prev, type: "discover" }))
+                    setConfig((prev) => ({ ...prev, type: "discover", query: [] }))
                   }
                 >
                   <div className="text-lg font-semibold mb-1">Discover</div>
                   <div className="text-xs opacity-70">Browse discover feed</div>
+                </Button>
+                <Button
+                  type="button"
+                  variant={config.type === "explore" ? "default" : "outline"}
+                  className="h-auto p-4 flex-col"
+                  onClick={() =>
+                    setConfig((prev) => ({ ...prev, type: "explore", query: [] }))
+                  }
+                >
+                  <div className="text-lg font-semibold mb-1">Explore</div>
+                  <div className="text-xs opacity-70">Browse explore topics</div>
                 </Button>
               </div>
             </div>
 
             {/* Query Input */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Search Queries
-                <span className="text-xs text-slate-500 ml-2">
-                  ({config.type === "hashtag" ? "hashtags" : "search terms"},
-                  comma-separated, or JSON array)
-                </span>
-              </label>
-              <textarea
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                placeholder={`Examples:\n${config.type === "hashtag" ? "music, dance, comedy" : "viral, trending, popular"}\n\n["${config.type === "hashtag" ? "music" : "viral"}", "${config.type === "hashtag" ? "dance" : "trending"}", "${config.type === "hashtag" ? "comedy" : "popular"}"]\n\nOr upload a JSON file below`}
-                value={queryInput}
-                onChange={(e) => handleQueryInputChange(e.target.value)}
-                rows={4}
-                required
-              />
-
-              <div className="mt-2">
-                <input
-                  ref={(input) => {
-                    if (input) {
-                      input.onclick = () => (input.value = "");
-                    }
-                  }}
-                  type="file"
-                  accept=".json"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="json-file-upload"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    document.getElementById("json-file-upload")?.click()
-                  }
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload JSON File
-                </Button>
-              </div>
-
-              {config.query.length > 0 && (
-                <div className="mt-2">
-                  <div className="text-xs text-slate-500 mb-1">
-                    Parsed queries:
+              {config.type === "explore" ? (
+                // Multi-select for explore topics
+                <>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Explore Topics
+                    <span className="text-xs text-slate-500 ml-2">
+                      (Select one or more topics)
+                    </span>
+                  </label>
+                  <div className="border border-slate-300 rounded-lg p-3 min-h-[100px] max-h-[300px] overflow-y-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {validExploreValues.map((value) => (
+                        <Button
+                          key={value}
+                          type="button"
+                          variant={config.query.includes(value) ? "default" : "outline"}
+                          size="sm"
+                          className="justify-start h-auto p-2 text-xs"
+                          onClick={() => {
+                            setConfig((prev) => ({
+                              ...prev,
+                              query: prev.query.includes(value)
+                                ? prev.query.filter((q) => q !== value)
+                                : [...prev.query, value],
+                            }));
+                          }}
+                        >
+                          {exploreValueLabels[value]}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {config.query.map((q, index) => (
-                      <Badge key={index} variant="secondary">
-                        {q}
-                      </Badge>
-                    ))}
+                  {config.query.length > 0 && (
+                    <div className="mt-2">
+                      <div className="text-xs text-slate-500 mb-1">
+                        Selected topics ({config.query.length}):
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {config.query.map((q) => (
+                          <Badge key={q} variant="secondary" className="text-xs">
+                            {exploreValueLabels[q]}
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-4 w-4 ml-1 p-0 hover:bg-transparent"
+                              onClick={() => {
+                                setConfig((prev) => ({
+                                  ...prev,
+                                  query: prev.query.filter((query) => query !== q),
+                                }));
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                // Textarea for hashtag and discover
+                <>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Search Queries
+                    <span className="text-xs text-slate-500 ml-2">
+                      ({config.type === "hashtag" ? "hashtags" : "search terms"},
+                      comma-separated, or JSON array)
+                    </span>
+                  </label>
+                  <textarea
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+                    placeholder={`Examples:\n${config.type === "hashtag" ? "music, dance, comedy" : "viral, trending, popular"}\n\n["${config.type === "hashtag" ? "music" : "viral"}", "${config.type === "hashtag" ? "dance" : "trending"}", "${config.type === "hashtag" ? "comedy" : "popular"}"]\n\nOr upload a JSON file below`}
+                    value={queryInput}
+                    onChange={(e) => handleQueryInputChange(e.target.value)}
+                    rows={4}
+                    required
+                  />
+
+                  <div className="mt-2">
+                    <input
+                      ref={(input) => {
+                        if (input) {
+                          input.onclick = () => (input.value = "");
+                        }
+                      }}
+                      type="file"
+                      accept=".json"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="json-file-upload"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        document.getElementById("json-file-upload")?.click()
+                      }
+                    >
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload JSON File
+                    </Button>
                   </div>
-                </div>
+
+                  {config.query.length > 0 && (
+                    <div className="mt-2">
+                      <div className="text-xs text-slate-500 mb-1">
+                        Parsed queries:
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {config.query.map((q, index) => (
+                          <Badge key={index} variant="secondary">
+                            {q}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

@@ -1,7 +1,7 @@
 import { spawn } from "child_process";
 import path from "path";
 
-type ScraperType = "discover" | "hashtag";
+type ScraperType = "discover" | "hashtag" | "explore";
 
 interface ScraperConfig {
   // Basic config
@@ -237,20 +237,22 @@ export class ScraperRunner {
     // Special handling for scraper initialization
     if (
       logText.includes("starting hashtag scraper") ||
-      logText.includes("starting discover scraper")
+      logText.includes("starting discover scraper") ||
+      logText.includes("starting explore scraper")
     ) {
       currentProgress = Math.max(currentProgress, 1);
       currentStep = "Starting scraper...";
     }
 
-    if (logText.includes("scraper configured")) {
+    if (logText.includes("scraper configured - targeting")) {
       currentProgress = Math.max(currentProgress, 2);
       currentStep = "Configuring scraper...";
     }
 
     if (
       logText.includes("initiating tiktok hashtag scraper") ||
-      logText.includes("initiating tiktok discover scraper")
+      logText.includes("initiating tiktok discover scraper") ||
+      logText.includes("initiating tiktok explore scraper")
     ) {
       currentProgress = Math.max(currentProgress, 3);
       currentStep = "Initiating TikTok scraper...";

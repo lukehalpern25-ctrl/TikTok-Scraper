@@ -4,9 +4,7 @@ import { PipelineVisualizer } from "./PipelineVisualizer";
 import { ProfileCard } from "./ProfileCard";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { Download, FileText, Hash, Search, Filter } from "lucide-react";
+import { Download, FileText, Eye } from "lucide-react";
 
 interface StepData {
   name: string;
@@ -15,7 +13,7 @@ interface StepData {
   count: number;
 }
 
-type ScraperType = "hashtag" | "discover" | "all";
+type ScraperType = "hashtag" | "discover" | "explore" | "all";
 
 export function DataExplorer() {
   const [runs, setRuns] = useState<RunData[]>([]);
@@ -29,6 +27,7 @@ export function DataExplorer() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<string>("fans");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [showFullQuery, setShowFullQuery] = useState(false);
 
   const steps: StepData[] = [
     { name: "Raw Extraction", file: "01_extracted_profiles", count: 0 },
@@ -94,6 +93,7 @@ export function DataExplorer() {
     setSelectedStep(null);
     setStepData([]);
     setRunData(null);
+    setShowFullQuery(false);
   };
 
   const loadRunData = async (timestamp: string) => {
@@ -126,6 +126,7 @@ export function DataExplorer() {
     setSelectedRun(timestamp);
     setSelectedStep(null);
     setStepData([]);
+    setShowFullQuery(false);
   };
 
   const handleStepSelect = (stepFile: string) => {
@@ -228,7 +229,7 @@ export function DataExplorer() {
           {/* Scraper Type Selector */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Scraper Type</label>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <button
                 type="button"
                 className={`p-4 border-2 rounded-lg transition-colors ${
@@ -265,6 +266,18 @@ export function DataExplorer() {
                 <div className="text-lg font-semibold mb-1">🔍 Discover</div>
                 <div className="text-xs">Discover runs</div>
               </button>
+              <button
+                type="button"
+                className={`p-4 border-2 rounded-lg transition-colors ${
+                  selectedScraperType === "explore"
+                    ? "border-blue-500 bg-blue-50 text-blue-700"
+                    : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+                }`}
+                onClick={() => handleScraperTypeChange("explore")}
+              >
+                <div className="text-lg font-semibold mb-1">🧭 Explore</div>
+                <div className="text-xs">Explore runs</div>
+              </button>
             </div>
           </div>
 
@@ -285,7 +298,7 @@ export function DataExplorer() {
                 const query = run.metadata?.options?.query?.join(', ') || 
                              run.metadata?.config?.hashtags?.join(', ') || 
                              'Unknown query';
-                const typeIcon = scraperType === 'discover' ? '🔍' : '#️⃣';
+                const typeIcon = scraperType === 'discover' ? '🔍' : scraperType === 'explore' ? '🧭' : '#️⃣';
                 
                 return (
                   <option key={run.timestamp} value={run.timestamp}>
@@ -302,15 +315,50 @@ export function DataExplorer() {
                 <div>
                   <div className="text-sm text-gray-600">Type</div>
                   <div className="font-medium text-gray-900">
-                    {runData.metadata?.options?.type === 'discover' ? '🔍 Discover' : '#️⃣ Hashtag'}
+                    {runData.metadata?.options?.type === 'discover' 
+                      ? '🔍 Discover' 
+                      : runData.metadata?.options?.type === 'explore'
+                        ? '🧭 Explore'
+                        : '#️⃣ Hashtag'}
                   </div>
                 </div>
-                <div>
+                <div className="relative">
                   <div className="text-sm text-gray-600">Query</div>
                   <div className="font-medium text-gray-900">
-                    {runData.metadata?.options?.query?.join(', ') || 
-                     runData.metadata?.config?.hashtags?.join(', ') || 
-                     'Unknown'}
+                    {(() => {
+                      const fullQuery = runData.metadata?.options?.query?.join(', ') || 
+                                       runData.metadata?.config?.hashtags?.join(', ') || 
+                                       'Unknown';
+                      const maxLength = 50;
+                      
+                      if (fullQuery.length <= maxLength) {
+                        return fullQuery;
+                      }
+                      
+                      return (
+                        <div className="relative group">
+                          <button
+                            type="button"
+                            className="text-left hover:text-blue-600 transition-colors cursor-pointer flex items-center gap-1"
+                            onClick={() => setShowFullQuery(!showFullQuery)}
+                          >
+                            <span>
+                              {showFullQuery ? fullQuery : `${fullQuery.substring(0, maxLength)}...`}
+                            </span>
+                            <Eye className="h-3 w-3 text-gray-400" />
+                          </button>
+                          
+                          {/* Tooltip */}
+                          {!showFullQuery && (
+                            <div className="absolute bottom-full left-0 mb-2 w-max max-w-xs bg-black text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
+                              <div className="break-words">{fullQuery}</div>
+                              <div className="text-gray-300 mt-1">Click to {showFullQuery ? 'hide' : 'show'} full query</div>
+                              <div className="absolute top-full left-2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
                 <div>
