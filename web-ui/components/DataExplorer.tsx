@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import { api, RunData } from "../utils/api";
 import { PipelineVisualizer } from "./PipelineVisualizer";
 import { ProfileCard } from "./ProfileCard";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Download, FileText, Hash, Search, Filter } from "lucide-react";
 
 interface StepData {
   name: string;
@@ -374,18 +379,22 @@ export function DataExplorer() {
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    <button 
-                      className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                    <Button 
+                      variant="outline"
                       onClick={exportCSV}
+                      disabled={stepData.length === 0}
                     >
-                      📊 Export CSV
-                    </button>
-                    <button 
-                      className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                      <FileText className="mr-2 h-4 w-4" />
+                      Export CSV
+                    </Button>
+                    <Button 
+                      variant="outline"
                       onClick={exportData}
+                      disabled={stepData.length === 0}
                     >
-                      📁 Export JSON
-                    </button>
+                      <Download className="mr-2 h-4 w-4" />
+                      Export JSON
+                    </Button>
                   </div>
                 </div>
               </div>

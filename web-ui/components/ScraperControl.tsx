@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { api, ScraperStatus, WebSocketMessage } from "../utils/api";
+import { cn } from "../lib/utils";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { Progress } from "./ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import { ChevronDown, ChevronUp, Play, Square, Upload, Download, Trash2 } from "lucide-react";
 
 type ScraperType = "discover" | "hashtag";
 
@@ -53,6 +60,7 @@ export function ScraperControl() {
   const [status, setStatus] = useState<ScraperStatus>({ running: false, logs: [] });
   const [logs, setLogs] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [terminalOpen, setTerminalOpen] = useState(false);
 
   useEffect(() => {
     loadStatus();
@@ -165,59 +173,53 @@ export function ScraperControl() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-6">
       {/* Configuration Panel */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">🚀 Scraper Configuration</h2>
-          <p className="text-gray-600">
+      <Card>
+        <CardHeader>
+          <CardTitle>Scraper Configuration</CardTitle>
+          <CardDescription>
             Configure and run TikTok hashtag or discover scraper
-          </p>
-        </div>
+          </CardDescription>
+        </CardHeader>
 
-        <div className="p-6">
+        <CardContent>
           <form onSubmit={(e) => { e.preventDefault(); startScraper(); }} className="space-y-6">
             {/* Scraper Type Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Scraper Type</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Scraper Type</label>
               <div className="grid grid-cols-2 gap-4">
-                <button
+                <Button
                   type="button"
-                  className={`p-4 border-2 rounded-lg transition-colors ${
-                    config.type === "hashtag"
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
+                  variant={config.type === "hashtag" ? "default" : "outline"}
+                  className="h-auto p-4 flex-col"
                   onClick={() => setConfig(prev => ({ ...prev, type: "hashtag" }))}
                 >
-                  <div className="text-lg font-semibold mb-1">#️⃣ Hashtag</div>
-                  <div className="text-xs">Search by hashtags</div>
-                </button>
-                <button
+                  <div className="text-lg font-semibold mb-1">Hashtag</div>
+                  <div className="text-xs opacity-70">Search by hashtags</div>
+                </Button>
+                <Button
                   type="button"
-                  className={`p-4 border-2 rounded-lg transition-colors ${
-                    config.type === "discover"
-                      ? "border-blue-500 bg-blue-50 text-blue-700"
-                      : "border-gray-300 bg-white text-gray-700 hover:border-gray-400"
-                  }`}
+                  variant={config.type === "discover" ? "default" : "outline"}
+                  className="h-auto p-4 flex-col"
                   onClick={() => setConfig(prev => ({ ...prev, type: "discover" }))}
                 >
-                  <div className="text-lg font-semibold mb-1">🔍 Discover</div>
-                  <div className="text-xs">Browse discover feed</div>
-                </button>
+                  <div className="text-lg font-semibold mb-1">Discover</div>
+                  <div className="text-xs opacity-70">Browse discover feed</div>
+                </Button>
               </div>
             </div>
 
             {/* Query Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Search Queries
-                <span className="text-xs text-gray-500 ml-2">
+                <span className="text-xs text-slate-500 ml-2">
                   ({config.type === "hashtag" ? "hashtags" : "search terms"}, comma-separated, or JSON array)
                 </span>
               </label>
               <textarea
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                 placeholder={`Examples:\n${config.type === "hashtag" ? "music, dance, comedy" : "viral, trending, popular"}\n\n["${config.type === "hashtag" ? "music" : "viral"}", "${config.type === "hashtag" ? "dance" : "trending"}", "${config.type === "hashtag" ? "comedy" : "popular"}"]\n\nOr upload a JSON file below`}
                 value={queryInput}
                 onChange={(e) => handleQueryInputChange(e.target.value)}
@@ -226,25 +228,37 @@ export function ScraperControl() {
               />
             
               <div className="mt-2">
-                <label className="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors cursor-pointer">
-                  📁 Upload JSON File
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                </label>
+                <input
+                  ref={(input) => {
+                    if (input) {
+                      input.onclick = () => input.value = '';
+                    }
+                  }}
+                  type="file"
+                  accept=".json"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="json-file-upload"
+                />
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => document.getElementById('json-file-upload')?.click()}
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload JSON File
+                </Button>
               </div>
             
               {config.query.length > 0 && (
                 <div className="mt-2">
-                  <div className="text-xs text-gray-500">Parsed queries:</div>
-                  <div className="flex flex-wrap gap-1 mt-1">
+                  <div className="text-xs text-slate-500 mb-1">Parsed queries:</div>
+                  <div className="flex flex-wrap gap-1">
                     {config.query.map((q, index) => (
-                      <span key={index} className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                      <Badge key={index} variant="secondary">
                         {q}
-                      </span>
+                      </Badge>
                     ))}
                   </div>
                 </div>
@@ -254,10 +268,10 @@ export function ScraperControl() {
             {/* Basic Settings */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Results per Query (1-500)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Results per Query (1-500)</label>
                 <input
                   type="number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                   min="1"
                   max="500"
                   value={config.limitPerQuery}
@@ -266,10 +280,10 @@ export function ScraperControl() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Time Window (days)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Time Window (days)</label>
                 <input
                   type="number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                   min="1"
                   value={config.timeWindowInDays}
                   onChange={(e) => setConfig(prev => ({ ...prev, timeWindowInDays: parseInt(e.target.value) || 30 }))}
@@ -280,13 +294,13 @@ export function ScraperControl() {
 
             {/* First Pass Filters */}
             <div className="border-t pt-4">
-              <h3 className="text-md font-semibold text-gray-800 mb-3">First Pass Filters</h3>
+              <h3 className="text-md font-semibold text-slate-800 mb-3">First Pass Filters</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Followers</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Min Followers</label>
                   <input
                     type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                     min="0"
                     value={config.minFollowers}
                     onChange={(e) => setConfig(prev => ({ ...prev, minFollowers: parseInt(e.target.value) || 0 }))}
@@ -294,10 +308,10 @@ export function ScraperControl() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Videos per Profile</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Videos per Profile</label>
                   <input
                     type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                     min="1"
                     value={config.videoLimitPerProfile}
                     onChange={(e) => setConfig(prev => ({ ...prev, videoLimitPerProfile: parseInt(e.target.value) || 10 }))}
@@ -309,12 +323,12 @@ export function ScraperControl() {
 
             {/* Second Pass Filters */}
             <div className="border-t pt-4">
-              <h3 className="text-md font-semibold text-gray-800 mb-3">Second Pass Filters</h3>
+              <h3 className="text-md font-semibold text-slate-800 mb-3">Second Pass Filters</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Remove Non-English</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Remove Non-English</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                     value={config.removeNonEnglish.toString()}
                     onChange={(e) => setConfig(prev => ({ ...prev, removeNonEnglish: e.target.value === "true" }))}
                   >
@@ -323,9 +337,9 @@ export function ScraperControl() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Include Pinned Videos</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Include Pinned Videos</label>
                   <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                     value={config.includePinnedVideos.toString()}
                     onChange={(e) => setConfig(prev => ({ ...prev, includePinnedVideos: e.target.value === "true" }))}
                   >
@@ -338,13 +352,13 @@ export function ScraperControl() {
 
             {/* Aggregation Filters */}
             <div className="border-t pt-4">
-              <h3 className="text-md font-semibold text-gray-800 mb-3">Aggregation Filters</h3>
+              <h3 className="text-md font-semibold text-slate-800 mb-3">Aggregation Filters</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Video Views</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Min Video Views</label>
                   <input
                     type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                     min="0"
                     value={config.minVideoViews}
                     onChange={(e) => setConfig(prev => ({ ...prev, minVideoViews: parseInt(e.target.value) || 0 }))}
@@ -352,10 +366,10 @@ export function ScraperControl() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Avg Views</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Min Avg Views</label>
                   <input
                     type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                     min="0"
                     value={config.minAvgViews}
                     onChange={(e) => setConfig(prev => ({ ...prev, minAvgViews: parseInt(e.target.value) || 0 }))}
@@ -363,10 +377,10 @@ export function ScraperControl() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Videos in Window</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Min Videos in Window</label>
                   <input
                     type="number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                     min="1"
                     value={config.minNoOfVideosInWindow}
                     onChange={(e) => setConfig(prev => ({ ...prev, minNoOfVideosInWindow: parseInt(e.target.value) || 1 }))}
@@ -384,129 +398,134 @@ export function ScraperControl() {
 
             {/* Control Buttons */}
             <div className="flex gap-2">
-              <button
+              <Button
                 type="submit"
-                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                  status.running || config.query.length === 0
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
                 disabled={status.running || config.query.length === 0}
+                className="flex-1"
               >
                 {status.running ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Running...
-                  </div>
+                  </>
                 ) : (
-                  "🚀 Start Scraper"
+                  <>
+                    <Play className="mr-2 h-4 w-4" />
+                    Start Scraper
+                  </>
                 )}
-              </button>
+              </Button>
               
               {status.running && (
-                <button
+                <Button
                   type="button"
-                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  variant="destructive"
                   onClick={stopScraper}
                 >
-                  ⏹️ Stop
-                </button>
+                  <Square className="mr-2 h-4 w-4" />
+                  Stop
+                </Button>
               )}
             </div>
           </form>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Status and Logs Panel */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex justify-between items-center">
+      {/* Status Panel */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">📊 Execution Status</h3>
-              <p className="text-gray-600">
-                Real-time scraper progress and logs
-              </p>
+              <CardTitle>Execution Status</CardTitle>
+              <CardDescription>Real-time scraper progress</CardDescription>
             </div>
-            <div className="flex gap-2">
-              <button 
-                className={`px-3 py-1 text-xs rounded-lg transition-colors ${
-                  logs.length === 0
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-gray-500 text-white hover:bg-gray-600"
-                }`}
-                onClick={clearLogs}
-                disabled={logs.length === 0}
-              >
-                🗑️ Clear
-              </button>
-              <button 
-                className={`px-3 py-1 text-xs rounded-lg transition-colors ${
-                  logs.length === 0
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-gray-500 text-white hover:bg-gray-600"
-                }`}
-                onClick={exportLogs}
-                disabled={logs.length === 0}
-              >
-                💾 Export
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-6">
-          {/* Status Indicator */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-                  status.running ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"
-                }`}>
-                  {status.running ? "🔄 Running" : "⏸️ Idle"}
-                </span>
-                {status.currentStep && (
-                  <span className="text-sm text-gray-600">
-                    {status.currentStep}
-                  </span>
-                )}
-              </div>
+            <div className="flex items-center gap-2">
+              <Badge variant={status.running ? "default" : "secondary"}>
+                {status.running ? "Running" : "Idle"}
+              </Badge>
               {status.progress !== undefined && (
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-slate-900">
                   {status.progress}%
                 </span>
               )}
             </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {status.currentStep && (
+            <p className="text-sm text-slate-600 mb-4">
+              {status.currentStep}
+            </p>
+          )}
           
-            {status.progress !== undefined && (
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-in-out"
-                  style={{ width: `${status.progress}%` }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Logs */}
-          <div className="bg-gray-900 text-gray-100 rounded-lg p-4 font-mono text-xs h-96 overflow-y-auto border border-gray-300">
-            {logs.length === 0 ? (
-              <div className="text-gray-400 text-center pt-8">
-                No logs yet. Start the scraper to see real-time output.
-              </div>
-            ) : (
-              logs.map((log, index) => (
-                <div key={index} className="mb-1">
-                  <span className="text-gray-500">
-                    [{new Date().toLocaleTimeString()}]
-                  </span>
-                  {" "}
-                  <span>{log}</span>
+          {status.progress !== undefined && (
+            <Progress value={status.progress} className="mb-4" />
+          )}
+          
+          {/* Collapsible Terminal */}
+          <Collapsible open={terminalOpen} onOpenChange={setTerminalOpen}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full mb-4">
+                <div className="flex items-center justify-between w-full">
+                  <span>Terminal Output</span>
+                  <div className="flex items-center gap-2">
+                    {logs.length > 0 && (
+                      <Badge variant="secondary">{logs.length} lines</Badge>
+                    )}
+                    {terminalOpen ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
                 </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="space-y-2 mb-4">
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={clearLogs}
+                    disabled={logs.length === 0}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Clear
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={exportLogs}
+                    disabled={logs.length === 0}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Export
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="bg-slate-900 text-slate-100 rounded-lg p-4 font-mono text-xs h-96 overflow-y-auto border border-slate-300">
+                {logs.length === 0 ? (
+                  <div className="text-slate-400 text-center pt-8">
+                    No logs yet. Start the scraper to see real-time output.
+                  </div>
+                ) : (
+                  logs.map((log, index) => (
+                    <div key={index} className="mb-1">
+                      <span className="text-slate-500">
+                        [{new Date().toLocaleTimeString()}]
+                      </span>
+                      {" "}
+                      <span>{log}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </CardContent>
+      </Card>
     </div>
   );
 }
