@@ -1,6 +1,7 @@
 import { WebSocketService } from "./services/WebSocketService";
 import { DataRoutes } from "./routes/dataRoutes";
 import { ScraperRoutes } from "./routes/scraperRoutes";
+import { CreatorRoutes } from "./routes/creatorRoutes";
 import { StaticRoutes } from "./routes/staticRoutes";
 
 // Initialize services
@@ -9,6 +10,7 @@ const wsService = new WebSocketService();
 // Initialize route handlers
 const dataRoutes = new DataRoutes();
 const scraperRoutes = new ScraperRoutes(wsService);
+const creatorRoutes = new CreatorRoutes();
 const staticRoutes = new StaticRoutes();
 
 const server = Bun.serve({
@@ -36,6 +38,9 @@ const server = Bun.serve({
     if (response) return response;
 
     response = await scraperRoutes.handleRequest(req);
+    if (response) return response;
+
+    response = await creatorRoutes.handleRequest(req);
     if (response) return response;
 
     // If no route matched, return 404

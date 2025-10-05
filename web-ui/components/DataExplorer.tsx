@@ -28,15 +28,18 @@ export function DataExplorer() {
   const [sortBy, setSortBy] = useState<string>("fans");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showFullQuery, setShowFullQuery] = useState(false);
+  const [showingNewCreators, setShowingNewCreators] = useState(false);
+  const [updatingCreatorList, setUpdatingCreatorList] = useState(false);
 
   const steps: StepData[] = [
     { name: "Raw Extraction", file: "01_extracted_profiles", count: 0 },
     { name: "Deduplication", file: "02_deduped_profiles", count: 0 },
     { name: "Quality Filter Pass 1", file: "03_quality_filtered_pass1", count: 0 },
     { name: "Profile Expansion", file: "04_expanded_profiles", count: 0 },
-    { name: "Final Deduplication", file: "05_final_deduped_profiles", count: 0 },
+    { name: "Final Deduplication", file: "05_final_deduped_video_rows", count: 0 },
     { name: "Quality Filter Pass 2", file: "06_quality_filtered_pass2", count: 0 },
-    { name: "Final Processing", file: "07_final_processed", count: 0 },
+    { name: "Quality Filter Pass 3", file: "07_quality_filtered_pass3", count: 0 },
+    { name: "Final Processing", file: "08_final_processed", count: 0 },
   ];
 
   useEffect(() => {
@@ -131,6 +134,74 @@ export function DataExplorer() {
 
   const handleStepSelect = (stepFile: string) => {
     setSelectedStep(stepFile);
+    setShowingNewCreators(false);
+  };
+
+  const showNewCreators = async () => {
+    if (!selectedRun) return;
+    
+    try {
+      setLoading(true);
+      const data = await api.getStepData(selectedRun, "09_new_creators_only");
+      setStepData(Array.isArray(data) ? data : []);
+      setSelectedStep("09_new_creators_only");
+      setShowingNewCreators(true);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load new creators data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hideNewCreators = async () => {
+    if (!selectedRun) return;
+    
+    try {
+      setLoading(true);
+      const data = await api.getStepData(selectedRun, "08_final_processed");
+      setStepData(Array.isArray(data) ? data : []);
+      setSelectedStep("08_final_processed");
+      setShowingNewCreators(false);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load final processed data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateCreatorList = async () => {
+    if (!selectedRun || !stepData.length) return;
+    
+    try {
+      setUpdatingCreatorList(true);
+      
+      // Extract profile URLs from the current step data
+      const profileUrls = stepData.map(item => item.authorMeta?.profileUrl).filter(Boolean);
+      
+      // Send to backend to append to CSV
+      const response = await fetch(`${api.baseUrl || ''}/api/creators/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ profileUrls }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update creator list');
+      }
+      
+      setError(null);
+      // Show success message or notification
+      alert(`Successfully added ${profileUrls.length} creators to the list!`);
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update creator list");
+    } finally {
+      setUpdatingCreatorList(false);
+    }
   };
 
   const exportData = () => {
@@ -432,13 +503,15 @@ export function DataExplorer() {
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {steps.find(s => s.file === selectedStep)?.name || selectedStep}
+                      {selectedStep === "09_new_creators_only" 
+                        ? "New Creators Only" 
+                        : steps.find(s => s.file === selectedStep)?.name || selectedStep}
                     </h3>
                     <p className="text-gray-600">
                       {filteredAndSortedData.length} items
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button 
                       variant="outline"
                       onClick={exportCSV}
@@ -455,6 +528,50 @@ export function DataExplorer() {
                       <Download className="mr-2 h-4 w-4" />
                       Export JSON
                     </Button>
+                    
+                    {/* New Creator Buttons - show appropriate button based on current view */}
+                    {selectedStep === "08_final_processed" && (
+                      <Button 
+                        variant="default"
+                        onClick={showNewCreators}
+                        disabled={loading}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Show Only New Creators
+                      </Button>
+                    )}
+                    
+                    {selectedStep === "09_new_creators_only" && (
+                      <Button 
+                        variant="secondary"
+                        onClick={hideNewCreators}
+                        disabled={loading}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Hide New Creators
+                      </Button>
+                    )}
+                    
+                    {/* Update Creator List Button - show when viewing new creators */}
+                    {selectedStep === "09_new_creators_only" && stepData.length > 0 && (
+                      <Button 
+                        variant="default"
+                        onClick={updateCreatorList}
+                        disabled={updatingCreatorList}
+                      >
+                        {updatingCreatorList ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Updating...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="mr-2 h-4 w-4" />
+                            Update Creator List
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

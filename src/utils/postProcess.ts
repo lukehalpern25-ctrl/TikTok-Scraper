@@ -1,4 +1,4 @@
-import { dedupe } from "../filters/dedupe";
+import { dedupe, dedupeAgaisntCreatorList } from "../filters/dedupe";
 import { writeData } from "./writeData";
 import {
   checkQualityFromAggregatedView,
@@ -113,6 +113,16 @@ export async function postProcess(
     JSON.stringify(processed, null, 2),
   );
 
+  // New deduplication against existing creator list
+  const newCreators = processed.filter(dedupeAgaisntCreatorList);
+  console.log(
+    `After creator list deduplication: ${newCreators.length} new creators`,
+  );
+  writeData(
+    path.join(intermediaryPath, "09_new_creators_only.json"),
+    JSON.stringify(newCreators, null, 2),
+  );
+
   // store the configuration that resulted in this as well to provide context
   const metadata = {
     config,
@@ -122,10 +132,12 @@ export async function postProcess(
       items: undefined, // removes the items to avoid storing it
     },
     afterProcessing: processed.length,
+    newCreators: newCreators.length,
   };
 
   const final = {
     processed,
+    newCreators,
     metadata,
   };
 
