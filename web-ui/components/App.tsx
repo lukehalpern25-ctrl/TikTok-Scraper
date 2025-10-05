@@ -20,7 +20,7 @@ function App() {
   useEffect(() => {
     // Connect to WebSocket
     api.connectWebSocket();
-    
+
     const unsubscribe = api.onWebSocketMessage((message: WebSocketMessage) => {
       if (message.type === "connected") {
         setWsConnected(true);
@@ -40,19 +40,23 @@ function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="max-h-screen bg-slate-50 flex">
       {/* Sidebar */}
-      <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
-        <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-slate-200">
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        <div className="flex flex-col h-screen">
+          <div className="p-6 border-b border-slate-200 flex-shrink-0">
             <h1 className="text-xl font-bold text-slate-900">TikTok Scraper</h1>
-            <p className="text-sm text-slate-600 mt-1">Content discovery platform</p>
+            <p className="text-sm text-slate-600 mt-1">
+              Content discovery platform
+            </p>
           </div>
-          
-          <nav className="flex-1 p-4 space-y-2">
+
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto overflow-x-hidden">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -63,7 +67,7 @@ function App() {
                     "w-full justify-start",
                     activeTab === item.id
                       ? "bg-slate-900 text-white"
-                      : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+                      : "text-slate-700 hover:text-slate-900 hover:bg-slate-100",
                   )}
                   onClick={() => {
                     setActiveTab(item.id);
@@ -76,14 +80,16 @@ function App() {
               );
             })}
           </nav>
-          
-          <div className="p-4 border-t border-slate-200">
+
+          <div className="p-4 border-t border-slate-200 flex-shrink-0">
             <div className="flex items-center gap-2">
               <Badge variant={wsConnected ? "default" : "destructive"}>
-                <span className={cn(
-                  "w-2 h-2 rounded-full mr-2",
-                  wsConnected ? "bg-green-500" : "bg-red-500"
-                )}></span>
+                <span
+                  className={cn(
+                    "w-2 h-2 rounded-full mr-2",
+                    wsConnected ? "bg-green-500" : "bg-red-500",
+                  )}
+                ></span>
                 {wsConnected ? "Connected" : "Disconnected"}
               </Badge>
             </div>
@@ -93,7 +99,7 @@ function App() {
 
       {/* Mobile overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -111,7 +117,9 @@ function App() {
             >
               <Menu className="h-6 w-6" />
             </Button>
-            <h1 className="text-lg font-semibold text-slate-900">TikTok Scraper</h1>
+            <h1 className="text-lg font-semibold text-slate-900">
+              TikTok Scraper
+            </h1>
             <div className="w-10" /> {/* Spacer */}
           </div>
         </div>
@@ -119,7 +127,18 @@ function App() {
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
             {activeTab === "scraper" && <ScraperControl />}
-            {activeTab === "dashboard" && <Dashboard />}
+            {activeTab === "dashboard" && (
+              <Dashboard
+                onNavigateToExplorer={(runTimestamp) => {
+                  setActiveTab("explorer");
+                  // Store the selected run timestamp for the DataExplorer to use
+                  window.sessionStorage.setItem(
+                    "selectedRunTimestamp",
+                    runTimestamp,
+                  );
+                }}
+              />
+            )}
             {activeTab === "explorer" && <DataExplorer />}
           </div>
         </main>
@@ -130,3 +149,4 @@ function App() {
 
 const root = createRoot(document.getElementById("root")!);
 root.render(<App />);
+

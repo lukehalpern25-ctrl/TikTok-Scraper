@@ -86,7 +86,6 @@ export class ScraperRunner {
         stdio: ["pipe", "pipe", "pipe"],
         env: {
           ...process.env,
-          APIFY_TOKEN: 'Replace with your Apify token',
         },
       });
 
@@ -100,11 +99,9 @@ export class ScraperRunner {
         const lines = buffer.split("\n");
         buffer = lines.pop() || ""; // Keep incomplete line in buffer
 
-        lines.forEach((line) => {
-          if (line.trim()) {
-            this.processLogLine(line.trim());
-          }
-        });
+        if (lines.length > 0) {
+          this.processLogLine(lines[lines.length - 1] || "");
+        }
       });
 
       currentProcess.stderr?.on("data", (data: Buffer) => {
@@ -164,40 +161,117 @@ export class ScraperRunner {
   private processLogLine(line: string): void {
     this.log(line);
 
-    // Extract progress information from log patterns
+    const logText = line.toLowerCase();
+    console.log(logText);
+
+    // Define pipeline stages based on actual log messages from src/utils/postProcess.ts
+    const stages = [
+      {
+        keyword: "starting data processing pipeline",
+        progress: 5,
+        step: "Initializing data processing pipeline",
+      },
+      {
+        keyword: "extracted",
+        progress: 15,
+        step: "Extracting author profiles",
+      },
+      {
+        keyword: "after deduplication",
+        progress: 25,
+        step: "Removing duplicate profiles",
+      },
+      {
+        keyword: "after initial quality filter",
+        progress: 35,
+        step: "Applying first quality filter",
+      },
+      {
+        keyword: "expanding profiles with additional data",
+        progress: 45,
+        step: "Expanding profiles with additional data",
+      },
+      {
+        keyword: "profile expansion complete",
+        progress: 60,
+        step: "Profile expansion completed",
+      },
+      {
+        keyword: "after final deduplication",
+        progress: 70,
+        step: "Final deduplication of video rows",
+      },
+      {
+        keyword: "after second quality filter",
+        progress: 80,
+        step: "Applying second quality filter",
+      },
+      {
+        keyword: "after third quality filter",
+        progress: 90,
+        step: "Applying third quality filter",
+      },
+      {
+        keyword: "after contact filter",
+        progress: 95,
+        step: "Filtering profiles with contact info",
+      },
+      {
+        keyword: "process complete",
+        progress: 100,
+        step: "Scraping process completed",
+      },
+    ];
+
+    // Find the highest progress stage that has been reached
+    let currentProgress = 0;
+    let currentStep = "Initializing...";
+
+    for (const stage of stages) {
+      if (logText.includes(stage.keyword)) {
+        currentProgress = stage.progress;
+        currentStep = stage.step;
+      }
+    }
+
+    // Special handling for scraper initialization
     if (
-      line.includes("Starting") &&
-      (line.includes("hashtag") || line.includes("discover"))
+      logText.includes("starting hashtag scraper") ||
+      logText.includes("starting discover scraper")
     ) {
-      this.updateProgress(10, "Starting scraper");
-    } else if (line.includes("Scraper configured")) {
-      this.updateProgress(15, "Configuring scraper");
-    } else if (line.includes("Initiating TikTok")) {
-      this.updateProgress(20, "Connecting to TikTok API");
-    } else if (line.includes("Scraping completed")) {
-      this.updateProgress(40, "Scraping completed");
-    } else if (line.includes("Dataset retrieved")) {
-      this.updateProgress(45, "Retrieving dataset");
-    } else if (line.includes("Starting data processing")) {
-      this.updateProgress(50, "Processing data");
-    } else if (line.includes("Extracted") && line.includes("author profiles")) {
-      this.updateProgress(55, "Extracting profiles");
-    } else if (line.includes("After deduplication")) {
-      this.updateProgress(60, "Removing duplicates");
-    } else if (line.includes("Quality check pass 1")) {
-      this.updateProgress(65, "Quality filtering (pass 1)");
-    } else if (line.includes("Expanding profiles")) {
-      this.updateProgress(70, "Expanding profiles");
-    } else if (line.includes("Profile expansion complete")) {
-      this.updateProgress(80, "Profile expansion complete");
-    } else if (line.includes("Quality check pass 2")) {
-      this.updateProgress(85, "Quality filtering (pass 2)");
-    } else if (line.includes("Quality check aggregation")) {
-      this.updateProgress(90, "Aggregation quality filtering");
-    } else if (line.includes("Saving results")) {
-      this.updateProgress(95, "Saving results");
-    } else if (line.includes("complete") && line.includes("scraper")) {
-      this.updateProgress(100, "Process complete");
+      currentProgress = Math.max(currentProgress, 1);
+      currentStep = "Starting scraper...";
+    }
+
+    if (logText.includes("scraper configured")) {
+      currentProgress = Math.max(currentProgress, 2);
+      currentStep = "Configuring scraper...";
+    }
+
+    if (
+      logText.includes("initiating tiktok hashtag scraper") ||
+      logText.includes("initiating tiktok discover scraper")
+    ) {
+      currentProgress = Math.max(currentProgress, 3);
+      currentStep = "Initiating TikTok scraper...";
+    }
+
+    if (logText.includes("scraping completed")) {
+      currentProgress = Math.max(currentProgress, 4);
+      currentStep = "Scraping completed, retrieving dataset...";
+    }
+
+    if (logText.includes("dataset retrieved")) {
+      currentProgress = Math.max(currentProgress, 5);
+      currentStep = "Dataset retrieved, starting processing...";
+    }
+
+    console.log(currentProgress, currentStep);
+
+    // should not go back to 0
+    if (currentProgress !== 0) {
+      // Update status if progress has changed
+      this.updateProgress(currentProgress, currentStep);
     }
   }
 
@@ -211,4 +285,3 @@ export class ScraperRunner {
 }
 
 export const scraperRunner = new ScraperRunner();
-

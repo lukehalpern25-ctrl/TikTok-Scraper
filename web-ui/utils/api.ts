@@ -10,7 +10,7 @@ export interface ScraperStatus {
   running: boolean;
   currentStep?: string;
   progress?: number;
-  logs?: string[];
+  logs: string[];
 }
 
 export interface WebSocketMessage {

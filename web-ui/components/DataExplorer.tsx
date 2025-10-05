@@ -44,6 +44,18 @@ export function DataExplorer() {
     loadRuns();
   }, []);
 
+  // Check for pre-selected run from navigation
+  useEffect(() => {
+    const preSelectedRun = window.sessionStorage.getItem("selectedRunTimestamp");
+    if (preSelectedRun && runs.length > 0) {
+      const runExists = runs.find(run => run.timestamp === preSelectedRun);
+      if (runExists) {
+        setSelectedRun(preSelectedRun);
+        window.sessionStorage.removeItem("selectedRunTimestamp");
+      }
+    }
+  }, [runs]);
+
   useEffect(() => {
     if (selectedRun) {
       loadRunData(selectedRun);

@@ -3,9 +3,13 @@ import { api, RunData } from "../utils/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, ExternalLink } from "lucide-react";
 
-export function Dashboard() {
+interface DashboardProps {
+  onNavigateToExplorer?: (runTimestamp: string) => void;
+}
+
+export function Dashboard({ onNavigateToExplorer }: DashboardProps = {}) {
   const [runs, setRuns] = useState<RunData[]>([]);
   const [pipelineStats, setPipelineStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -251,10 +255,17 @@ export function Dashboard() {
                         : "0";
 
                     return (
-                      <tr key={run.timestamp}>
+                      <tr 
+                        key={run.timestamp}
+                        className="hover:bg-slate-50 cursor-pointer transition-colors"
+                        onClick={() => onNavigateToExplorer && onNavigateToExplorer(run.timestamp)}
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-slate-900">
-                            {formatTimestamp(run.timestamp)}
+                          <div className="flex items-center gap-2">
+                            <div className="text-sm text-slate-900">
+                              {formatTimestamp(run.timestamp)}
+                            </div>
+                            <ExternalLink className="h-3 w-3 text-slate-400" />
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
