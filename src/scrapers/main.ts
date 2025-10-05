@@ -158,6 +158,11 @@ program
       }
     }
 
+    // check that videoLimitPerProfile is less than or equal to limitPerQuery
+    if (options.videoLimitPerProfile < options.minNoOfVideosInWindow) {
+      throw new Error("The minNoOfVideosInWindow must be less than or equal to the videoLimitPerProfile");
+    }
+
     switch (options.type) {
       case "hashtag":
         await hashtag(options);
