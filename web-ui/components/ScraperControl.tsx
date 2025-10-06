@@ -103,7 +103,7 @@ const loadConfigFromLocalStorage = (config: SavedConfig): ScraperConfig => {
 export function ScraperControl() {
   const [config, setConfig] = useState<ScraperConfig>({
     // Basic config
-    limitPerQuery: 50,
+    limitPerQuery: 380,
     query: [],
     type: "hashtag",
 
@@ -119,9 +119,9 @@ export function ScraperControl() {
     minNoOfVideosInWindow: 3,
 
     // Direct to apify
-    videoLimitPerProfile: 10,
+    videoLimitPerProfile: 5,
     includePinnedVideos: false,
-    timeWindowInDays: 30,
+    timeWindowInDays: 14,
   });
   const [queryInput, setQueryInput] = useState("");
   const [status, setStatus] = useState<ScraperStatus>({
@@ -132,6 +132,7 @@ export function ScraperControl() {
   const [error, setError] = useState<string | null>(null);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [savedConfigs, setSavedConfigs] = useState<SavedConfig[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     loadStatus();
@@ -289,69 +290,14 @@ export function ScraperControl() {
 
   return (
     <div className="space-y-6">
-      {/* Configuration Panel */}
+      {/* Scraper Type Selection */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Scraper Configuration</CardTitle>
-              <CardDescription>
-                Configure and run TikTok hashtag or discover scraper
-              </CardDescription>
-            </div>
-
-            {/* Restore Config Section - Top Right */}
-            {savedConfigs.length > 0 && (
-              <div className="ml-4">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  <RotateCcw className="inline h-4 w-4 mr-1" />
-                  Restore Previous Configuration
-                </label>
-                <Select
-                  onValueChange={(value) => {
-                    const selectedConfig = savedConfigs.find(
-                      (c) => c.timestamp.toString() === value,
-                    );
-                    if (selectedConfig) restoreConfig(selectedConfig);
-                  }}
-                >
-                  <SelectTrigger className="w-64">
-                    <SelectValue placeholder="Select a previous configuration..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {savedConfigs.map((savedConfig) => (
-                      <SelectItem
-                        key={savedConfig.timestamp}
-                        value={savedConfig.timestamp.toString()}
-                      >
-                        {savedConfig.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-
-        <CardContent>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              startScraper();
-            }}
-            className="space-y-6"
-          >
-            {/* Scraper Type Selection */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Scraper Type
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Button
                   type="button"
                   variant={config.type === "hashtag" ? "default" : "outline"}
-                  className="h-auto p-4 flex-col"
+                  className={`h-auto p-3 flex-col ${config.type === "hashtag" ? "bg-blue-600 hover:bg-blue-700 text-white" : "hover:bg-blue-50 hover:border-blue-200"}`}
                   onClick={() =>
                     setConfig((prev) => ({ ...prev, type: "hashtag", query: [] }))
                   }
@@ -362,7 +308,7 @@ export function ScraperControl() {
                 <Button
                   type="button"
                   variant={config.type === "discover" ? "default" : "outline"}
-                  className="h-auto p-4 flex-col"
+                  className={`h-auto p-3 flex-col ${config.type === "discover" ? "bg-cyan-500 hover:bg-cyan-600 text-white" : "hover:bg-cyan-50 hover:border-cyan-200"}`}
                   onClick={() =>
                     setConfig((prev) => ({ ...prev, type: "discover", query: [] }))
                   }
@@ -373,7 +319,7 @@ export function ScraperControl() {
                 <Button
                   type="button"
                   variant={config.type === "explore" ? "default" : "outline"}
-                  className="h-auto p-4 flex-col"
+                  className={`h-auto p-3 flex-col ${config.type === "explore" ? "bg-purple-600 hover:bg-purple-700 text-white" : "hover:bg-purple-50 hover:border-purple-200"}`}
                   onClick={() =>
                     setConfig((prev) => ({ ...prev, type: "explore", query: [] }))
                   }
@@ -382,8 +328,20 @@ export function ScraperControl() {
                   <div className="text-xs opacity-70">Browse explore topics</div>
                 </Button>
               </div>
-            </div>
+        </CardContent>
+      </Card>
 
+      {/* Configuration Panel */}
+      <Card>
+        <CardContent className="pt-4">
+          
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              startScraper();
+            }}
+            className="space-y-10"
+          >
             {/* Query Input */}
             <div>
               {config.type === "explore" ? (
@@ -446,27 +404,37 @@ export function ScraperControl() {
                       </div>
                     </div>
                   )}
+                  
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
+                        showFilters 
+                          ? "text-amber-700 bg-amber-100 border border-amber-200" 
+                          : "text-amber-600 bg-amber-50 border border-amber-200 hover:bg-amber-100"
+                      }`}
+                      onClick={() => setShowFilters(!showFilters)}
+                    >
+                      Filters
+                    </button>
+                  </div>
                 </>
               ) : (
                 // Textarea for hashtag and discover
                 <>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Search Queries
-                    <span className="text-xs text-slate-500 ml-2">
-                      ({config.type === "hashtag" ? "hashtags" : "search terms"},
-                      comma-separated, or JSON array)
-                    </span>
+                  <label className="block text-base font-medium text-slate-700 mb-2">
+                    {config.type === "hashtag" ? "Input Your Hashtags" : "Input Your Keywords"}
                   </label>
                   <textarea
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                    placeholder={`Examples:\n${config.type === "hashtag" ? "music, dance, comedy" : "viral, trending, popular"}\n\n["${config.type === "hashtag" ? "music" : "viral"}", "${config.type === "hashtag" ? "dance" : "trending"}", "${config.type === "hashtag" ? "comedy" : "popular"}"]\n\nOr upload a JSON file below`}
+                    className="w-full px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 text-xs placeholder:text-xs"
+                    placeholder={`Examples:\n\n${config.type === "hashtag" ? "music, dance, comedy" : "viral, trending, popular"}\n\n["${config.type === "hashtag" ? "music" : "viral"}", "${config.type === "hashtag" ? "dance" : "trending"}", "${config.type === "hashtag" ? "comedy" : "popular"}"]\n\nOr upload a JSON file below`}
                     value={queryInput}
                     onChange={(e) => handleQueryInputChange(e.target.value)}
-                    rows={4}
+                    rows={8}
                     required
                   />
 
-                  <div className="mt-2">
+                  <div className="mt-2 flex gap-2">
                     <input
                       ref={(input) => {
                         if (input) {
@@ -479,23 +447,33 @@ export function ScraperControl() {
                       className="hidden"
                       id="json-file-upload"
                     />
-                    <Button
+                    <button
                       type="button"
-                      variant="outline"
-                      size="sm"
+                      className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 border border-slate-200 rounded hover:bg-slate-200 transition-colors"
                       onClick={() =>
                         document.getElementById("json-file-upload")?.click()
                       }
                     >
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload JSON File
-                    </Button>
+                      <Upload className="mr-1 h-3 w-3 inline" />
+                      Upload JSON
+                    </button>
+                    <button
+                      type="button"
+                      className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
+                        showFilters 
+                          ? "text-amber-700 bg-amber-100 border border-amber-200" 
+                          : "text-amber-600 bg-amber-50 border border-amber-200 hover:bg-amber-100"
+                      }`}
+                      onClick={() => setShowFilters(!showFilters)}
+                    >
+                      Filters
+                    </button>
                   </div>
 
                   {config.query.length > 0 && (
-                    <div className="mt-2">
+                    <div className="mt-4">
                       <div className="text-xs text-slate-500 mb-1">
-                        Parsed queries:
+                        {config.type === "hashtag" ? "Hashtags:" : "Keywords:"}
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {config.query.map((q, index) => (
@@ -510,199 +488,6 @@ export function ScraperControl() {
               )}
             </div>
 
-            {/* Basic Settings */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Results per Query (1-500)
-                </label>
-                <input
-                  type="number"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                  min="1"
-                  max="500"
-                  value={config.limitPerQuery}
-                  onChange={(e) =>
-                    setConfig((prev) => ({
-                      ...prev,
-                      limitPerQuery: parseInt(e.target.value) || 50,
-                    }))
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Time Window (days)
-                </label>
-                <input
-                  type="number"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                  min="1"
-                  value={config.timeWindowInDays}
-                  onChange={(e) =>
-                    setConfig((prev) => ({
-                      ...prev,
-                      timeWindowInDays: parseInt(e.target.value) || 30,
-                    }))
-                  }
-                  required
-                />
-              </div>
-            </div>
-
-            {/* First Pass Filters */}
-            <div className="border-t pt-4">
-              <h3 className="text-md font-semibold text-slate-800 mb-3">
-                First Pass Filters
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Min Followers
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                    min="0"
-                    value={config.minFollowers}
-                    onChange={(e) =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        minFollowers: parseInt(e.target.value) || 0,
-                      }))
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Videos per Profile
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                    min="1"
-                    value={config.videoLimitPerProfile}
-                    onChange={(e) =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        videoLimitPerProfile: parseInt(e.target.value) || 10,
-                      }))
-                    }
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Second Pass Filters */}
-            <div className="border-t pt-4">
-              <h3 className="text-md font-semibold text-slate-800 mb-3">
-                Second Pass Filters
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Remove Non-English
-                  </label>
-                  <select
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                    value={config.removeNonEnglish.toString()}
-                    onChange={(e) =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        removeNonEnglish: e.target.value === "true",
-                      }))
-                    }
-                  >
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Include Pinned Videos
-                  </label>
-                  <select
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                    value={config.includePinnedVideos.toString()}
-                    onChange={(e) =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        includePinnedVideos: e.target.value === "true",
-                      }))
-                    }
-                  >
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Aggregation Filters */}
-            <div className="border-t pt-4">
-              <h3 className="text-md font-semibold text-slate-800 mb-3">
-                Aggregation Filters
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Min Video Views
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                    min="0"
-                    value={config.minVideoViews}
-                    onChange={(e) =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        minVideoViews: parseInt(e.target.value) || 0,
-                      }))
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Min Avg Views
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                    min="0"
-                    value={config.minAvgViews}
-                    onChange={(e) =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        minAvgViews: parseInt(e.target.value) || 0,
-                      }))
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Min Videos in Window
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
-                    min="1"
-                    value={config.minNoOfVideosInWindow}
-                    onChange={(e) =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        minNoOfVideosInWindow: parseInt(e.target.value) || 1,
-                      }))
-                    }
-                    required
-                  />
-                </div>
-              </div>
-            </div>
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -711,11 +496,11 @@ export function ScraperControl() {
             )}
 
             {/* Control Buttons */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-12">
               <Button
                 type="submit"
-                disabled={status.running || config.query.length === 0}
-                className="flex-1"
+                disabled={status.running}
+                className={`flex-1 h-12 text-base font-semibold ${config.query.length === 0 ? "bg-slate-300 hover:bg-slate-400 text-slate-600" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
               >
                 {status.running ? (
                   <>
@@ -725,7 +510,7 @@ export function ScraperControl() {
                 ) : (
                   <>
                     <Play className="mr-2 h-4 w-4" />
-                    Start Scraper
+                    {config.query.length === 0 ? (config.type === "hashtag" ? "Add Hashtags" : config.type === "discover" ? "Add Keywords" : "Add Inputs To Run Scraper") : "Start Scraper"}
                   </>
                 )}
               </Button>
@@ -744,6 +529,74 @@ export function ScraperControl() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Filters */}
+      {showFilters && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Filters</CardTitle>
+            <CardDescription>Set minimum thresholds for creator selection</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Min Followers
+                </label>
+                <input
+                  type="number"
+                  className="w-full px-2 py-1.5 text-sm border border-slate-300 rounded focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                  min="0"
+                  value={config.minFollowers}
+                  onChange={(e) =>
+                    setConfig((prev) => ({
+                      ...prev,
+                      minFollowers: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Min Video Views
+                </label>
+                <input
+                  type="number"
+                  className="w-full px-2 py-1.5 text-sm border border-slate-300 rounded focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                  min="0"
+                  value={config.minVideoViews}
+                  onChange={(e) =>
+                    setConfig((prev) => ({
+                      ...prev,
+                      minVideoViews: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Min Avg Views
+                </label>
+                <input
+                  type="number"
+                  className="w-full px-2 py-1.5 text-sm border border-slate-300 rounded focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                  min="0"
+                  value={config.minAvgViews}
+                  onChange={(e) =>
+                    setConfig((prev) => ({
+                      ...prev,
+                      minAvgViews: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  required
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Status Panel */}
       <Card>
