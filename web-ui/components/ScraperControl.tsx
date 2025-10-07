@@ -121,7 +121,7 @@ export function ScraperControl() {
     // Direct to apify
     videoLimitPerProfile: 5,
     includePinnedVideos: false,
-    timeWindowInDays: 14,
+    timeWindowInDays: 30,
   });
   const [queryInput, setQueryInput] = useState("");
   const [status, setStatus] = useState<ScraperStatus>({
