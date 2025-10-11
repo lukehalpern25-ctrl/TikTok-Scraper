@@ -381,47 +381,47 @@ export function Dashboard({ onNavigateToExplorer }: DashboardProps = {}) {
             {pipelineStats ? (
               <div className="space-y-2">
                 <div className="flex justify-between py-1">
-                  <span className="text-sm text-slate-600">Raw Extraction</span>
+                  <span className="text-sm text-slate-600">Extract creator profiles from Apify</span>
                   <span className="font-medium text-slate-900">{pipelineStats.extracted}</span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-sm text-slate-600">After Deduplication</span>
+                  <span className="text-sm text-slate-600">Remove duplicate profiles by ID</span>
                   <span className="font-medium text-slate-900">
                     {pipelineStats.deduped} ({pipelineStats.extracted > 0 ? ((pipelineStats.deduped / pipelineStats.extracted) * 100).toFixed(1) : 0}%)
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-sm text-slate-600">Quality Filter Pass 1</span>
+                  <span className="text-sm text-slate-600">Filter by minimum followers</span>
                   <span className="font-medium text-slate-900">
                     {pipelineStats.qualityPass1} ({pipelineStats.extracted > 0 ? ((pipelineStats.qualityPass1 / pipelineStats.extracted) * 100).toFixed(1) : 0}%)
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-sm text-slate-600">After Profile Expansion</span>
+                  <span className="text-sm text-slate-600">Expand profiles with full data</span>
                   <span className="font-medium text-slate-900">
                     {pipelineStats.expanded} ({pipelineStats.extracted > 0 ? ((pipelineStats.expanded / pipelineStats.extracted) * 100).toFixed(1) : 0}%)
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-sm text-slate-600">Final Video Deduped</span>
+                  <span className="text-sm text-slate-600">Final deduplication by creator ID</span>
                   <span className="font-medium text-slate-900">
                     {pipelineStats.finalDeduped} ({pipelineStats.extracted > 0 ? ((pipelineStats.finalDeduped / pipelineStats.extracted) * 100).toFixed(1) : 0}%)
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-sm text-slate-600">Quality Pass 2</span>
+                  <span className="text-sm text-slate-600">Remove non-English creators</span>
                   <span className="font-medium text-slate-900">
                     {pipelineStats.qualityPass2} ({pipelineStats.extracted > 0 ? ((pipelineStats.qualityPass2 / pipelineStats.extracted) * 100).toFixed(1) : 0}%)
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-sm text-slate-600">Quality Pass 3</span>
+                  <span className="text-sm text-slate-600">Filter by video count and view metrics</span>
                   <span className="font-medium text-slate-900">
                     {pipelineStats.qualityPass3} ({pipelineStats.extracted > 0 ? ((pipelineStats.qualityPass3 / pipelineStats.extracted) * 100).toFixed(1) : 0}%)
                   </span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-sm text-slate-600">Final Results</span>
+                  <span className="text-sm text-slate-600">Filter creators with bio and contact info</span>
                   <span className="font-medium text-green-600">
                     {pipelineStats.final} ({pipelineStats.extracted > 0 ? ((pipelineStats.final / pipelineStats.extracted) * 100).toFixed(1) : 0}%)
                   </span>

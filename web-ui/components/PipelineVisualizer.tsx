@@ -34,42 +34,42 @@ export function PipelineVisualizer({
 
   const stepDefinitions: PipelineStep[] = [
     {
-      name: "Raw Extraction",
+      name: "Extract creator profiles from Apify",
       file: "01_extracted_profiles",
       description: "Extract author profiles from TikTok hashtag/discover feed",
     },
     {
-      name: "Deduplication",
+      name: "Remove duplicate profiles by ID",
       file: "02_deduped_profiles",
       description: "Remove duplicate profiles using content hash",
     },
     {
-      name: "Quality Filter Pass 1",
+      name: "Filter by minimum followers",
       file: "03_quality_filtered_pass1",
       description: "Filter by minimum followers and video count",
     },
     {
-      name: "Profile Expansion",
+      name: "Expand profiles with full data",
       file: "04_expanded_profiles",
       description: "Fetch additional profile data and recent videos",
     },
     {
-      name: "Video Deduplication",
+      name: "Final deduplication by creator ID",
       file: "05_final_deduped_video_rows",
       description: "Remove duplicate video rows after profile expansion",
     },
     {
-      name: "Quality Filter Pass 2",
+      name: "Remove non-English creators",
       file: "06_quality_filtered_pass2",
       description: "Filter by video views and engagement metrics",
     },
     {
-      name: "Quality Filter Pass 3",
+      name: "Filter by video count and view metrics",
       file: "07_quality_filtered_pass3",
       description: "Apply final quality filters and thresholds",
     },
     {
-      name: "Final Processing",
+      name: "Filter creators with bio and contact info",
       file: "08_final_processed",
       description:
         "Keep only creators with contact information and meeting all criteria",

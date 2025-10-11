@@ -3,7 +3,13 @@ import { api, RunData } from "../utils/api";
 import { PipelineVisualizer } from "./PipelineVisualizer";
 import { ProfileCard } from "./ProfileCard";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Download, FileText, Eye } from "lucide-react";
 
 interface StepData {
@@ -17,7 +23,8 @@ type ScraperType = "hashtag" | "discover" | "explore" | "all";
 
 export function DataExplorer() {
   const [runs, setRuns] = useState<RunData[]>([]);
-  const [selectedScraperType, setSelectedScraperType] = useState<ScraperType>("all");
+  const [selectedScraperType, setSelectedScraperType] =
+    useState<ScraperType>("all");
   const [selectedRun, setSelectedRun] = useState<string | null>(null);
   const [selectedStep, setSelectedStep] = useState<string | null>(null);
   const [runData, setRunData] = useState<any>(null);
@@ -32,14 +39,46 @@ export function DataExplorer() {
   const [updatingCreatorList, setUpdatingCreatorList] = useState(false);
 
   const steps: StepData[] = [
-    { name: "Raw Extraction", file: "01_extracted_profiles", count: 0 },
-    { name: "Deduplication", file: "02_deduped_profiles", count: 0 },
-    { name: "Quality Filter Pass 1", file: "03_quality_filtered_pass1", count: 0 },
-    { name: "Profile Expansion", file: "04_expanded_profiles", count: 0 },
-    { name: "Final Deduplication", file: "05_final_deduped_video_rows", count: 0 },
-    { name: "Quality Filter Pass 2", file: "06_quality_filtered_pass2", count: 0 },
-    { name: "Quality Filter Pass 3", file: "07_quality_filtered_pass3", count: 0 },
-    { name: "Final Processing", file: "08_final_processed", count: 0 },
+    {
+      name: "Extract creator profiles from Apify",
+      file: "01_extracted_profiles",
+      count: 0,
+    },
+    {
+      name: "Remove duplicate profiles by ID",
+      file: "02_deduped_profiles",
+      count: 0,
+    },
+    {
+      name: "Filter by minimum followers",
+      file: "03_quality_filtered_pass1",
+      count: 0,
+    },
+    {
+      name: "Expand profiles with full data",
+      file: "04_expanded_profiles",
+      count: 0,
+    },
+    {
+      name: "Final deduplication by creator ID",
+      file: "05_final_deduped_video_rows",
+      count: 0,
+    },
+    {
+      name: "Remove non-English creators",
+      file: "06_quality_filtered_pass2",
+      count: 0,
+    },
+    {
+      name: "Filter by video count and view metrics",
+      file: "07_quality_filtered_pass3",
+      count: 0,
+    },
+    {
+      name: "Filter creators with bio and contact info",
+      file: "08_final_processed",
+      count: 0,
+    },
   ];
 
   useEffect(() => {
@@ -48,9 +87,11 @@ export function DataExplorer() {
 
   // Check for pre-selected run from navigation
   useEffect(() => {
-    const preSelectedRun = window.sessionStorage.getItem("selectedRunTimestamp");
+    const preSelectedRun = window.sessionStorage.getItem(
+      "selectedRunTimestamp",
+    );
     if (preSelectedRun && runs.length > 0) {
-      const runExists = runs.find(run => run.timestamp === preSelectedRun);
+      const runExists = runs.find((run) => run.timestamp === preSelectedRun);
       if (runExists) {
         setSelectedRun(preSelectedRun);
         window.sessionStorage.removeItem("selectedRunTimestamp");
@@ -87,7 +128,9 @@ export function DataExplorer() {
     if (selectedScraperType === "all") {
       return runs;
     }
-    return runs.filter(run => run.metadata?.options?.type === selectedScraperType);
+    return runs.filter(
+      (run) => run.metadata?.options?.type === selectedScraperType,
+    );
   };
 
   const handleScraperTypeChange = (type: ScraperType) => {
@@ -139,7 +182,7 @@ export function DataExplorer() {
 
   const showNewCreators = async () => {
     if (!selectedRun) return;
-    
+
     try {
       setLoading(true);
       const data = await api.getStepData(selectedRun, "09_new_creators_only");
@@ -148,7 +191,9 @@ export function DataExplorer() {
       setShowingNewCreators(true);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load new creators data");
+      setError(
+        err instanceof Error ? err.message : "Failed to load new creators data",
+      );
     } finally {
       setLoading(false);
     }
@@ -156,7 +201,7 @@ export function DataExplorer() {
 
   const hideNewCreators = async () => {
     if (!selectedRun) return;
-    
+
     try {
       setLoading(true);
       const data = await api.getStepData(selectedRun, "08_final_processed");
@@ -165,7 +210,11 @@ export function DataExplorer() {
       setShowingNewCreators(false);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load final processed data");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load final processed data",
+      );
     } finally {
       setLoading(false);
     }
@@ -173,32 +222,35 @@ export function DataExplorer() {
 
   const updateCreatorList = async () => {
     if (!selectedRun || !stepData.length) return;
-    
+
     try {
       setUpdatingCreatorList(true);
-      
+
       // Extract profile URLs from the current step data
-      const profileUrls = stepData.map(item => item.authorMeta?.profileUrl).filter(Boolean);
-      
+      const profileUrls = stepData
+        .map((item) => item.authorMeta?.profileUrl)
+        .filter(Boolean);
+
       // Send to backend to append to CSV
-      const response = await fetch(`${api.baseUrl || ''}/api/creators/update`, {
-        method: 'POST',
+      const response = await fetch(`${api.baseUrl || ""}/api/creators/update`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ profileUrls }),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to update creator list');
+        throw new Error("Failed to update creator list");
       }
-      
+
       setError(null);
       // Show success message or notification
       alert(`Successfully added ${profileUrls.length} creators to the list!`);
-      
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update creator list");
+      setError(
+        err instanceof Error ? err.message : "Failed to update creator list",
+      );
     } finally {
       setUpdatingCreatorList(false);
     }
@@ -206,75 +258,98 @@ export function DataExplorer() {
 
   const exportData = () => {
     if (!stepData.length) return;
-    
+
     const dataStr = JSON.stringify(stepData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
+    const dataUri =
+      "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+
     const exportFileDefaultName = `${selectedRun}_${selectedStep}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
+
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
     linkElement.click();
   };
 
   const exportCSV = () => {
     if (!stepData.length) return;
-    
-    const headers = ['Name', 'Username', 'Followers', 'Videos', 'Verified', 'Bio Link', 'Signature'];
+
+    const headers = [
+      "Name",
+      "Username",
+      "Followers",
+      "Videos",
+      "Verified",
+      "Bio Link",
+      "Signature",
+    ];
     const csvContent = [
-      headers.join(','),
-      ...stepData.map(item => [
-        item.authorMeta?.nickName || '',
-        item.authorMeta?.name || '',
-        item.authorMeta?.fans || 0,
-        item.authorMeta?.video || 0,
-        item.authorMeta?.verified || false,
-        item.authorMeta?.bioLink || '',
-        `"${(item.authorMeta?.signature || '').replace(/"/g, '""')}"`,
-      ].join(','))
-    ].join('\n');
-    
-    const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
+      headers.join(","),
+      ...stepData.map((item) =>
+        [
+          item.authorMeta?.nickName || "",
+          item.authorMeta?.name || "",
+          item.authorMeta?.fans || 0,
+          item.authorMeta?.video || 0,
+          item.authorMeta?.verified || false,
+          item.authorMeta?.bioLink || "",
+          `"${(item.authorMeta?.signature || "").replace(/"/g, '""')}"`,
+        ].join(","),
+      ),
+    ].join("\n");
+
+    const dataUri =
+      "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
     const exportFileDefaultName = `${selectedRun}_${selectedStep}.csv`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
+
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
     linkElement.click();
   };
 
   const filteredAndSortedData = stepData
-    .filter(item => {
+    .filter((item) => {
       if (!searchTerm) return true;
       const searchLower = searchTerm.toLowerCase();
       return (
-        (item.authorMeta?.name || '').toLowerCase().includes(searchLower) ||
-        (item.authorMeta?.nickName || '').toLowerCase().includes(searchLower) ||
-        (item.authorMeta?.signature || '').toLowerCase().includes(searchLower)
+        (item.authorMeta?.name || "").toLowerCase().includes(searchLower) ||
+        (item.authorMeta?.nickName || "").toLowerCase().includes(searchLower) ||
+        (item.authorMeta?.signature || "").toLowerCase().includes(searchLower)
       );
     })
     .sort((a, b) => {
       let aVal, bVal;
-      
+
       switch (sortBy) {
-        case 'fans':
+        case "fans":
           aVal = parseInt(a.authorMeta?.fans) || 0;
           bVal = parseInt(b.authorMeta?.fans) || 0;
           break;
-        case 'video':
+        case "video":
           aVal = parseInt(a.authorMeta?.video) || 0;
           bVal = parseInt(b.authorMeta?.video) || 0;
           break;
-        case 'name':
-          aVal = a.authorMeta?.name || '';
-          bVal = b.authorMeta?.name || '';
+        case "engagement":
+          // Calculate engagement rate as (likes / videos / fans) * 100
+          const aFans = parseInt(a.authorMeta?.fans) || 0;
+          const bFans = parseInt(b.authorMeta?.fans) || 0;
+          const aVideos = parseInt(a.authorMeta?.video) || 0;
+          const bVideos = parseInt(b.authorMeta?.video) || 0;
+          const aHearts = parseInt(a.authorMeta?.heart) || 0;
+          const bHearts = parseInt(b.authorMeta?.heart) || 0;
+          aVal = (aFans > 0 && aVideos > 0) ? (aHearts / aVideos / aFans) * 100 : 0;
+          bVal = (bFans > 0 && bVideos > 0) ? (bHearts / bVideos / bFans) * 100 : 0;
+          break;
+        case "name":
+          aVal = a.authorMeta?.name || "";
+          bVal = b.authorMeta?.name || "";
           break;
         default:
           return 0;
       }
-      
-      if (sortOrder === 'asc') {
+
+      if (sortOrder === "asc") {
         return aVal > bVal ? 1 : -1;
       } else {
         return aVal < bVal ? 1 : -1;
@@ -290,16 +365,20 @@ export function DataExplorer() {
       {/* Run Selector */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Data Explorer</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Data Explorer
+          </h2>
           <p className="text-gray-600">
             Explore scraped data through each pipeline stage
           </p>
         </div>
-        
+
         <div className="p-6 space-y-4">
           {/* Scraper Type Selector */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Scraper Type</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Scraper Type
+            </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <button
                 type="button"
@@ -357,20 +436,26 @@ export function DataExplorer() {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Select Scraper Run ({getFilteredRuns().length} available)
             </label>
-            <select 
+            <select
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              value={selectedRun || ''}
+              value={selectedRun || ""}
               onChange={(e) => handleRunChange(e.target.value)}
               disabled={getFilteredRuns().length === 0}
             >
               <option value="">Choose a run...</option>
-              {getFilteredRuns().map(run => {
-                const scraperType = run.metadata?.options?.type || 'hashtag';
-                const query = run.metadata?.options?.query?.join(', ') || 
-                             run.metadata?.config?.hashtags?.join(', ') || 
-                             'Unknown query';
-                const typeIcon = scraperType === 'discover' ? '🔍' : scraperType === 'explore' ? '🧭' : '#️⃣';
-                
+              {getFilteredRuns().map((run) => {
+                const scraperType = run.metadata?.options?.type || "hashtag";
+                const query =
+                  run.metadata?.options?.query?.join(", ") ||
+                  run.metadata?.config?.hashtags?.join(", ") ||
+                  "Unknown query";
+                const typeIcon =
+                  scraperType === "discover"
+                    ? "🔍"
+                    : scraperType === "explore"
+                      ? "🧭"
+                      : "#️⃣";
+
                 return (
                   <option key={run.timestamp} value={run.timestamp}>
                     {typeIcon} {formatTimestamp(run.timestamp)} - {query}
@@ -386,26 +471,27 @@ export function DataExplorer() {
                 <div>
                   <div className="text-sm text-gray-600">Type</div>
                   <div className="font-medium text-gray-900">
-                    {runData.metadata?.options?.type === 'discover' 
-                      ? '🔍 Discover' 
-                      : runData.metadata?.options?.type === 'explore'
-                        ? '🧭 Explore'
-                        : '#️⃣ Hashtag'}
+                    {runData.metadata?.options?.type === "discover"
+                      ? "🔍 Discover"
+                      : runData.metadata?.options?.type === "explore"
+                        ? "🧭 Explore"
+                        : "#️⃣ Hashtag"}
                   </div>
                 </div>
                 <div className="relative">
                   <div className="text-sm text-gray-600">Query</div>
                   <div className="font-medium text-gray-900">
                     {(() => {
-                      const fullQuery = runData.metadata?.options?.query?.join(', ') || 
-                                       runData.metadata?.config?.hashtags?.join(', ') || 
-                                       'Unknown';
+                      const fullQuery =
+                        runData.metadata?.options?.query?.join(", ") ||
+                        runData.metadata?.config?.hashtags?.join(", ") ||
+                        "Unknown";
                       const maxLength = 50;
-                      
+
                       if (fullQuery.length <= maxLength) {
                         return fullQuery;
                       }
-                      
+
                       return (
                         <div className="relative group">
                           <button
@@ -414,16 +500,21 @@ export function DataExplorer() {
                             onClick={() => setShowFullQuery(!showFullQuery)}
                           >
                             <span>
-                              {showFullQuery ? fullQuery : `${fullQuery.substring(0, maxLength)}...`}
+                              {showFullQuery
+                                ? fullQuery
+                                : `${fullQuery.substring(0, maxLength)}...`}
                             </span>
                             <Eye className="h-3 w-3 text-gray-400" />
                           </button>
-                          
+
                           {/* Tooltip */}
                           {!showFullQuery && (
                             <div className="absolute bottom-full left-0 mb-2 w-max max-w-xs bg-black text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10">
                               <div className="break-words">{fullQuery}</div>
-                              <div className="text-gray-300 mt-1">Click to {showFullQuery ? 'hide' : 'show'} full query</div>
+                              <div className="text-gray-300 mt-1">
+                                Click to {showFullQuery ? "hide" : "show"} full
+                                query
+                              </div>
                               <div className="absolute top-full left-2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
                             </div>
                           )}
@@ -435,49 +526,70 @@ export function DataExplorer() {
                 <div>
                   <div className="text-sm text-gray-600">Limit per Query</div>
                   <div className="font-medium text-gray-900">
-                    {runData.metadata?.options?.limitPerQuery || 
-                     runData.metadata?.config?.resultsPerPage || 
-                     'N/A'}
+                    {runData.metadata?.options?.limitPerQuery ||
+                      runData.metadata?.config?.resultsPerPage ||
+                      "N/A"}
                   </div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600">Raw Items</div>
-                  <div className="font-medium text-gray-900">{runData.metadata?.rawResult?.count || 0}</div>
+                  <div className="font-medium text-gray-900">
+                    {runData.metadata?.rawResult?.count || 0}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600">Final Results</div>
-                  <div className="font-medium text-gray-900">{runData.processed?.length || 0}</div>
+                  <div className="font-medium text-gray-900">
+                    {runData.processed?.length || 0}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600">Success Rate</div>
                   <div className="font-medium text-gray-900">
-                    {runData.metadata?.rawResult?.count > 0 
-                      ? `${((runData.processed?.length || 0) / runData.metadata.rawResult.count * 100).toFixed(1)}%`
-                      : '0%'}
+                    {runData.metadata?.rawResult?.count > 0
+                      ? `${(((runData.processed?.length || 0) / runData.metadata.rawResult.count) * 100).toFixed(1)}%`
+                      : "0%"}
                   </div>
                 </div>
               </div>
-              
+
               {/* Additional Options Display */}
               {runData.metadata?.options && (
                 <div className="mt-4 pt-4 border-t border-gray-300">
-                  <div className="text-sm text-gray-600 mb-2">Quality Filters</div>
+                  <div className="text-sm text-gray-600 mb-2">
+                    Quality Filters
+                  </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                     <div>
                       <span className="text-gray-500">Min Followers:</span>
-                      <span className="ml-1 font-medium">{runData.metadata.options.minFollowers?.toLocaleString() || 'N/A'}</span>
+                      <span className="ml-1 font-medium">
+                        {runData.metadata.options.minFollowers?.toLocaleString() ||
+                          "N/A"}
+                      </span>
                     </div>
                     <div>
                       <span className="text-gray-500">Min Video Views:</span>
-                      <span className="ml-1 font-medium">{runData.metadata.options.minVideoViews?.toLocaleString() || 'N/A'}</span>
+                      <span className="ml-1 font-medium">
+                        {runData.metadata.options.minVideoViews?.toLocaleString() ||
+                          "N/A"}
+                      </span>
                     </div>
                     <div>
                       <span className="text-gray-500">Min Avg Views:</span>
-                      <span className="ml-1 font-medium">{runData.metadata.options.minAvgViews?.toLocaleString() || 'N/A'}</span>
+                      <span className="ml-1 font-medium">
+                        {runData.metadata.options.minAvgViews?.toLocaleString() ||
+                          "N/A"}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-gray-500">Non-English Removed:</span>
-                      <span className="ml-1 font-medium">{runData.metadata.options.removeNonEnglish ? 'Yes' : 'No'}</span>
+                      <span className="text-gray-500">
+                        Non-English Removed:
+                      </span>
+                      <span className="ml-1 font-medium">
+                        {runData.metadata.options.removeNonEnglish
+                          ? "Yes"
+                          : "No"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -490,7 +602,7 @@ export function DataExplorer() {
       {selectedRun && (
         <>
           {/* Pipeline Visualizer */}
-          <PipelineVisualizer 
+          <PipelineVisualizer
             runTimestamp={selectedRun}
             selectedStep={selectedStep}
             onStepSelect={handleStepSelect}
@@ -503,16 +615,17 @@ export function DataExplorer() {
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {selectedStep === "09_new_creators_only" 
-                        ? "New Creators Only" 
-                        : steps.find(s => s.file === selectedStep)?.name || selectedStep}
+                      {selectedStep === "09_new_creators_only"
+                        ? "Showing only creators not already present in our CSV"
+                        : steps.find((s) => s.file === selectedStep)?.name ||
+                          selectedStep}
                     </h3>
                     <p className="text-gray-600">
                       {filteredAndSortedData.length} items
                     </p>
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    <Button 
+                    <Button
                       variant="outline"
                       onClick={exportCSV}
                       disabled={stepData.length === 0}
@@ -520,7 +633,7 @@ export function DataExplorer() {
                       <FileText className="mr-2 h-4 w-4" />
                       Export CSV
                     </Button>
-                    <Button 
+                    <Button
                       variant="outline"
                       onClick={exportData}
                       disabled={stepData.length === 0}
@@ -528,10 +641,10 @@ export function DataExplorer() {
                       <Download className="mr-2 h-4 w-4" />
                       Export JSON
                     </Button>
-                    
+
                     {/* New Creator Buttons - show appropriate button based on current view */}
                     {selectedStep === "08_final_processed" && (
-                      <Button 
+                      <Button
                         variant="default"
                         onClick={showNewCreators}
                         disabled={loading}
@@ -540,9 +653,9 @@ export function DataExplorer() {
                         Show Only New Creators
                       </Button>
                     )}
-                    
+
                     {selectedStep === "09_new_creators_only" && (
-                      <Button 
+                      <Button
                         variant="secondary"
                         onClick={hideNewCreators}
                         disabled={loading}
@@ -551,27 +664,28 @@ export function DataExplorer() {
                         Hide New Creators
                       </Button>
                     )}
-                    
+
                     {/* Update Creator List Button - show when viewing new creators */}
-                    {selectedStep === "09_new_creators_only" && stepData.length > 0 && (
-                      <Button 
-                        variant="default"
-                        onClick={updateCreatorList}
-                        disabled={updatingCreatorList}
-                      >
-                        {updatingCreatorList ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Updating...
-                          </>
-                        ) : (
-                          <>
-                            <Download className="mr-2 h-4 w-4" />
-                            Update Creator List
-                          </>
-                        )}
-                      </Button>
-                    )}
+                    {selectedStep === "09_new_creators_only" &&
+                      stepData.length > 0 && (
+                        <Button
+                          variant="default"
+                          onClick={updateCreatorList}
+                          disabled={updatingCreatorList}
+                        >
+                          {updatingCreatorList ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Updating...
+                            </>
+                          ) : (
+                            <>
+                              <Download className="mr-2 h-4 w-4" />
+                              Update Creator List
+                            </>
+                          )}
+                        </Button>
+                      )}
                   </div>
                 </div>
               </div>
@@ -580,7 +694,9 @@ export function DataExplorer() {
               <div className="p-6 border-b border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Search
+                    </label>
                     <input
                       type="text"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -590,7 +706,9 @@ export function DataExplorer() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Sort By
+                    </label>
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={sortBy}
@@ -598,15 +716,20 @@ export function DataExplorer() {
                     >
                       <option value="fans">Followers</option>
                       <option value="video">Video Count</option>
+                      <option value="engagement">Engagement Rate</option>
                       <option value="name">Username</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Order</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Order
+                    </label>
                     <select
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={sortOrder}
-                      onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}
+                      onChange={(e) =>
+                        setSortOrder(e.target.value as "asc" | "desc")
+                      }
                     >
                       <option value="desc">Descending</option>
                       <option value="asc">Ascending</option>
@@ -627,7 +750,9 @@ export function DataExplorer() {
                   </div>
                 ) : filteredAndSortedData.length === 0 ? (
                   <div className="text-center py-12">
-                    <p className="text-gray-500">No data found for this step.</p>
+                    <p className="text-gray-500">
+                      No data found for this step.
+                    </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -641,7 +766,8 @@ export function DataExplorer() {
               {filteredAndSortedData.length > 50 && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg text-center">
                   <p className="text-gray-500 text-sm">
-                    Showing first 50 of {filteredAndSortedData.length} results. Use export to get all data.
+                    Showing first 50 of {filteredAndSortedData.length} results.
+                    Use export to get all data.
                   </p>
                 </div>
               )}
@@ -652,3 +778,4 @@ export function DataExplorer() {
     </div>
   );
 }
+

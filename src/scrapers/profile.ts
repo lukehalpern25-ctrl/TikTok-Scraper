@@ -20,7 +20,6 @@ export async function scrapeProfile(
     shouldDownloadSubtitles: false,
     shouldDownloadVideos: false,
     excludePinnedPosts: !qualityConfig.includePinnedVideos,
-    oldestPostDateUnified: qualityConfig.timeWindowInDays.toString() + " days",
   };
 
   console.log(
