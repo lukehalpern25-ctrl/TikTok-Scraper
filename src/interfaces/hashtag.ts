@@ -89,9 +89,5 @@ export interface HashtagItem {
 
 export interface HashtagResponse {
   items: HashtagItem[];
-  total: number;
-  offset: number;
   count: number;
-  limit: number;
-  desc: boolean;
 }

@@ -1,9 +1,11 @@
 type ScraperType = "discover" | "hashtag" | "explore";
+type ScraperProvider = "clockworks" | "apidojo";
 
 export interface CliOptions {
   limitPerQuery: number;
   query: string[];
   type: ScraperType;
+  provider: ScraperProvider;
 
   // first pass filters
   minFollowers: number;

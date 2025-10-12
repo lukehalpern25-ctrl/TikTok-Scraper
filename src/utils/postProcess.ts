@@ -39,10 +39,20 @@ export async function postProcess(
     JSON.stringify(authorProfiles, null, 2),
   );
 
-  const deduped = authorProfiles.filter(dedupe);
-  console.log(`After deduplication: ${deduped.length} unique profiles`);
+  // First dedupe against existing creator list to remove already known creators
+  const newCreatorsOnly = authorProfiles.filter(dedupeAgaisntCreatorList);
+  console.log(
+    `After creator list deduplication: ${newCreatorsOnly.length} new creators (removed ${authorProfiles.length - newCreatorsOnly.length} existing)`,
+  );
   writeData(
-    path.join(intermediaryPath, "02_deduped_profiles.json"),
+    path.join(intermediaryPath, "02_new_creators_only.json"),
+    JSON.stringify(newCreatorsOnly, null, 2),
+  );
+
+  const deduped = newCreatorsOnly.filter(dedupe);
+  console.log(`After profile deduplication: ${deduped.length} unique profiles`);
+  writeData(
+    path.join(intermediaryPath, "03_deduped_profiles.json"),
     JSON.stringify(deduped, null, 2),
   );
 
@@ -50,43 +60,31 @@ export async function postProcess(
     isGoodQuality(qualityConfig, { row: r, pass: 1 }),
   );
   console.log(
-    `After initial quality filter: ${qualityFiltered.length} profiles`,
+    `After minimum followers filter: ${qualityFiltered.length} profiles`,
   );
   writeData(
-    path.join(intermediaryPath, "03_quality_filtered_pass1.json"),
+    path.join(intermediaryPath, "04_min_followers_filtered.json"),
     JSON.stringify(qualityFiltered, null, 2),
   );
 
   console.log(`Expanding profiles with additional data...`);
-  const expanded = await expandProfile(
-    qualityFiltered,
-    qualityConfig,
-  );
+  const expanded = await expandProfile(qualityFiltered, qualityConfig);
   console.log(
     `Profile expansion complete: ${expanded.length} enhanced profiles`,
   );
   writeData(
-    path.join(intermediaryPath, "04_expanded_profiles.json"),
+    path.join(intermediaryPath, "05_expanded_profiles.json"),
     JSON.stringify(expanded, null, 2),
   );
 
-  const finalDeduping = expanded.filter(dedupe);
-  console.log(
-    `After final deduplication: ${finalDeduping.length} unique video rows`,
-  );
-  writeData(
-    path.join(intermediaryPath, "05_final_deduped_video_rows.json"),
-    JSON.stringify(finalDeduping, null, 2),
-  );
-
-  const secondQualityFiltered = finalDeduping.filter((r) =>
+  const secondQualityFiltered = expanded.filter((r) =>
     isGoodQuality(qualityConfig, { row: r, pass: 2 }),
   );
   console.log(
-    `After second quality filter: ${secondQualityFiltered.length} video rows`,
+    `After non-English removal: ${secondQualityFiltered.length} English creators`,
   );
   writeData(
-    path.join(intermediaryPath, "06_quality_filtered_pass2.json"),
+    path.join(intermediaryPath, "06_english_creators_only.json"),
     JSON.stringify(secondQualityFiltered, null, 2),
   );
 
@@ -95,10 +93,10 @@ export async function postProcess(
     secondQualityFiltered,
   );
   console.log(
-    `After third quality filter: ${aggQualityFiltered.length} profiles`,
+    `After video metrics filter: ${aggQualityFiltered.length} high-quality creators`,
   );
   writeData(
-    path.join(intermediaryPath, "07_quality_filtered_pass3.json"),
+    path.join(intermediaryPath, "07_video_metrics_filtered.json"),
     JSON.stringify(aggQualityFiltered, null, 2),
   );
 
@@ -106,21 +104,11 @@ export async function postProcess(
     (r) => hasBio(r) || hasEmailOrLink(r),
   );
   console.log(
-    `After contact filter: ${processed.length} profiles with contact info`,
+    `After contact filter: ${processed.length} creators with contact info`,
   );
   writeData(
-    path.join(intermediaryPath, "08_final_processed.json"),
+    path.join(intermediaryPath, "08_final_with_contact.json"),
     JSON.stringify(processed, null, 2),
-  );
-
-  // New deduplication against existing creator list
-  const newCreators = processed.filter(dedupeAgaisntCreatorList);
-  console.log(
-    `After creator list deduplication: ${newCreators.length} new creators`,
-  );
-  writeData(
-    path.join(intermediaryPath, "09_new_creators_only.json"),
-    JSON.stringify(newCreators, null, 2),
   );
 
   // store the configuration that resulted in this as well to provide context
@@ -132,12 +120,10 @@ export async function postProcess(
       items: undefined, // removes the items to avoid storing it
     },
     afterProcessing: processed.length,
-    newCreators: newCreators.length,
   };
 
   const final = {
     processed,
-    newCreators,
     metadata,
   };
 

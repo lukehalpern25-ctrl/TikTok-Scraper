@@ -146,9 +146,20 @@ program
       return value;
     },
   )
+  .option(
+    "-p, --provider <provider>",
+    "scraper provider: clockworks or apidojo (default: clockworks)",
+    (value) => {
+      if (value !== "clockworks" && value !== "apidojo") {
+        throw new Error("provider must be either clockworks or apidojo");
+      }
+      return value;
+    },
+    "clockworks"
+  )
   .action(async (options: CliOptions) => {
     console.log(
-      `Starting ${options.type} scraper, scrapping ${options.limitPerQuery} items for queries:`,
+      `Starting ${options.type} scraper using ${options.provider} provider, scrapping ${options.limitPerQuery} items for queries:`,
       options.query,
     );
 
@@ -156,6 +167,11 @@ program
       if (options.query.some((query) => !validExploreCalues.includes(query))) {
         throw new Error("Invalid explore query, valid values are: " + validExploreCalues.join(", "));
       }
+    }
+
+    // Validate provider compatibility
+    if (options.provider === "apidojo" && options.type !== "hashtag") {
+      throw new Error("Apidojo provider only supports hashtag scraping. Please use clockworks provider for discover and explore scraping.");
     }
 
     // check that videoLimitPerProfile is less than or equal to limitPerQuery

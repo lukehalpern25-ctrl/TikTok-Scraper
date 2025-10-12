@@ -82,9 +82,5 @@ export interface DiscoverItem {
 
 export interface DiscoverResponse {
   items: DiscoverItem[];
-  total: number;
-  offset: number;
   count: number;
-  limit: number;
-  desc: boolean;
 }

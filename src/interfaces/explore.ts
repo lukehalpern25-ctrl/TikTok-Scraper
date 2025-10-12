@@ -58,9 +58,5 @@ export interface ExploreItem {
 
 export interface ExploreResponse {
   items: ExploreItem[];
-  total: number;
-  offset: number;
   count: number;
-  limit: number;
-  desc: boolean;
 }

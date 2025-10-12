@@ -35,7 +35,6 @@ export function DataExplorer() {
   const [sortBy, setSortBy] = useState<string>("fans");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showFullQuery, setShowFullQuery] = useState(false);
-  const [showingNewCreators, setShowingNewCreators] = useState(false);
   const [updatingCreatorList, setUpdatingCreatorList] = useState(false);
 
   const steps: StepData[] = [
@@ -45,38 +44,38 @@ export function DataExplorer() {
       count: 0,
     },
     {
+      name: "Filter out existing creators",
+      file: "02_new_creators_only",
+      count: 0,
+    },
+    {
       name: "Remove duplicate profiles by ID",
-      file: "02_deduped_profiles",
+      file: "03_deduped_profiles",
       count: 0,
     },
     {
       name: "Filter by minimum followers",
-      file: "03_quality_filtered_pass1",
+      file: "04_min_followers_filtered",
       count: 0,
     },
     {
       name: "Expand profiles with full data",
-      file: "04_expanded_profiles",
-      count: 0,
-    },
-    {
-      name: "Final deduplication by creator ID",
-      file: "05_final_deduped_video_rows",
+      file: "05_expanded_profiles",
       count: 0,
     },
     {
       name: "Remove non-English creators",
-      file: "06_quality_filtered_pass2",
+      file: "06_english_creators_only",
       count: 0,
     },
     {
-      name: "Filter by video count and view metrics",
-      file: "07_quality_filtered_pass3",
+      name: "Filter by video metrics",
+      file: "07_video_metrics_filtered",
       count: 0,
     },
     {
-      name: "Filter creators with bio and contact info",
-      file: "08_final_processed",
+      name: "Filter creators with contact info",
+      file: "08_final_with_contact",
       count: 0,
     },
   ];
@@ -177,48 +176,8 @@ export function DataExplorer() {
 
   const handleStepSelect = (stepFile: string) => {
     setSelectedStep(stepFile);
-    setShowingNewCreators(false);
   };
 
-  const showNewCreators = async () => {
-    if (!selectedRun) return;
-
-    try {
-      setLoading(true);
-      const data = await api.getStepData(selectedRun, "09_new_creators_only");
-      setStepData(Array.isArray(data) ? data : []);
-      setSelectedStep("09_new_creators_only");
-      setShowingNewCreators(true);
-      setError(null);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load new creators data",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const hideNewCreators = async () => {
-    if (!selectedRun) return;
-
-    try {
-      setLoading(true);
-      const data = await api.getStepData(selectedRun, "08_final_processed");
-      setStepData(Array.isArray(data) ? data : []);
-      setSelectedStep("08_final_processed");
-      setShowingNewCreators(false);
-      setError(null);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load final processed data",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const updateCreatorList = async () => {
     if (!selectedRun || !stepData.length) return;
@@ -615,10 +574,8 @@ export function DataExplorer() {
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {selectedStep === "09_new_creators_only"
-                        ? "Showing only creators not already present in our CSV"
-                        : steps.find((s) => s.file === selectedStep)?.name ||
-                          selectedStep}
+                      {steps.find((s) => s.file === selectedStep)?.name ||
+                        selectedStep}
                     </h3>
                     <p className="text-gray-600">
                       {filteredAndSortedData.length} items
@@ -642,31 +599,8 @@ export function DataExplorer() {
                       Export JSON
                     </Button>
 
-                    {/* New Creator Buttons - show appropriate button based on current view */}
-                    {selectedStep === "08_final_processed" && (
-                      <Button
-                        variant="default"
-                        onClick={showNewCreators}
-                        disabled={loading}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        Show Only New Creators
-                      </Button>
-                    )}
-
-                    {selectedStep === "09_new_creators_only" && (
-                      <Button
-                        variant="secondary"
-                        onClick={hideNewCreators}
-                        disabled={loading}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        Hide New Creators
-                      </Button>
-                    )}
-
                     {/* Update Creator List Button - show when viewing new creators */}
-                    {selectedStep === "09_new_creators_only" &&
+                    {selectedStep === "02_new_creators_only" &&
                       stepData.length > 0 && (
                         <Button
                           variant="default"

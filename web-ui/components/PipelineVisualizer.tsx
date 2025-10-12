@@ -39,40 +39,39 @@ export function PipelineVisualizer({
       description: "Extract author profiles from TikTok hashtag/discover feed",
     },
     {
+      name: "Filter out existing creators",
+      file: "02_new_creators_only",
+      description: "Remove creators already present in our existing creator list",
+    },
+    {
       name: "Remove duplicate profiles by ID",
-      file: "02_deduped_profiles",
+      file: "03_deduped_profiles",
       description: "Remove duplicate profiles using content hash",
     },
     {
       name: "Filter by minimum followers",
-      file: "03_quality_filtered_pass1",
+      file: "04_min_followers_filtered",
       description: "Filter by minimum followers and video count",
     },
     {
       name: "Expand profiles with full data",
-      file: "04_expanded_profiles",
+      file: "05_expanded_profiles",
       description: "Fetch additional profile data and recent videos",
     },
     {
-      name: "Final deduplication by creator ID",
-      file: "05_final_deduped_video_rows",
-      description: "Remove duplicate video rows after profile expansion",
-    },
-    {
       name: "Remove non-English creators",
-      file: "06_quality_filtered_pass2",
-      description: "Filter by video views and engagement metrics",
+      file: "06_english_creators_only",
+      description: "Filter out non-English speaking creators",
     },
     {
-      name: "Filter by video count and view metrics",
-      file: "07_quality_filtered_pass3",
-      description: "Apply final quality filters and thresholds",
+      name: "Filter by video metrics",
+      file: "07_video_metrics_filtered",
+      description: "Apply video count and view metrics quality filters",
     },
     {
-      name: "Filter creators with bio and contact info",
-      file: "08_final_processed",
-      description:
-        "Keep only creators with contact information and meeting all criteria",
+      name: "Filter creators with contact info",
+      file: "08_final_with_contact",
+      description: "Keep only creators with bio links or contact information",
     },
   ];
 

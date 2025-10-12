@@ -98,10 +98,6 @@ export interface ProfileItem {
 
 export interface ProfileResponse {
   items: ProfileItem[];
-  total: number;
-  offset: number;
   count: number;
-  limit: number;
-  desc: boolean;
 }
 

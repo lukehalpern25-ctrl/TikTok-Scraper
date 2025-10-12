@@ -2,6 +2,7 @@ import { ApifyClient } from "apify-client";
 import path from "path";
 import { writeData } from "../utils/writeData";
 import { postProcess } from "../utils/postProcess";
+import { apifyBatchRequest } from "../utils/apifyBatchRequest";
 import type { CliOptions } from "../interfaces/cliOptions";
 import type { DiscoverResponse } from "../interfaces/discover";
 
@@ -12,34 +13,43 @@ const client = new ApifyClient({ token: process.env.APIFY_TOKEN });
 export async function discover(options: CliOptions) {
   console.log("Starting discover scraper");
 
-  // scraper config
-  const config = {
-    hashtags: options.query,
+  // Base scraper config (without hashtags)
+  const baseConfig = {
     resultsPerPage: options.limitPerQuery,
     shouldDownloadCovers: false,
     shouldDownloadSlideshowImages: false,
     shouldDownloadSubtitles: false,
     shouldDownloadVideos: false,
   };
+
   console.log(
     `Scraper configured - targeting ${options.limitPerQuery} results per query (${options.query.join(", ")})`,
   );
 
-  console.log("Initiating TikTok discover scraper...");
-  const resp = await client
-    .actor("clockworks/tiktok-discover-scraper")
-    .call(config);
+  // Use batch request utility
+  const batchResult = await apifyBatchRequest(client, {
+    actorId: "clockworks/tiktok-discover-scraper",
+    queries: options.query,
+    baseConfig,
+    queryFieldName: "hashtags",
+    batchSize: 7, // Split into 7 parallel requests
+  });
 
-  console.log("Scraping completed - retrieving dataset");
+  // Create dataset response in expected format
+  const dataset: DiscoverResponse = {
+    items: batchResult.items,
+    count: batchResult.count,
+  };
 
-  // using limit 0 to just get everything in 1 go skips the multiple round trips
-  // using fields to avoid unneccesary bandwidth usage taking just what we need.
-  const dataset = (await client
-    .dataset(resp.defaultDatasetId)
-    .listItems({ limit: 0 })) as unknown as DiscoverResponse;
-  console.log(`Dataset retrieved: ${dataset.count} raw items`);
+  console.log(
+    `Dataset retrieved: ${dataset.count} raw items (${batchResult.successfulRequests}/${options.query.length} successful requests)`,
+  );
 
-  const { final, timestamp } = await postProcess(config, options, dataset);
+  const { final, timestamp } = await postProcess(
+    { hashtags: options.query, ...baseConfig },
+    options,
+    dataset,
+  );
 
   console.log("Saving results");
 

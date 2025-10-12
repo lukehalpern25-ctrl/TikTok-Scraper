@@ -36,12 +36,14 @@ import {
 import { validExploreValues, exploreValueLabels } from "../utils/exploreValues";
 
 type ScraperType = "discover" | "hashtag" | "explore";
+type ScraperProvider = "clockworks" | "apidojo";
 
 interface ScraperConfig {
   // Basic config
   limitPerQuery: number;
   query: string[];
   type: ScraperType;
+  provider: ScraperProvider;
 
   // First pass filters
   minFollowers: number;
@@ -103,9 +105,11 @@ const loadConfigFromLocalStorage = (config: SavedConfig): ScraperConfig => {
 export function ScraperControl() {
   const [config, setConfig] = useState<ScraperConfig>({
     // Basic config
-    limitPerQuery: 380,
+    // limitPerQuery: 380,
+    limitPerQuery: 30,
     query: [],
     type: "hashtag",
+    provider: "clockworks",
 
     // First pass filters
     minFollowers: 1000,
@@ -294,47 +298,108 @@ export function ScraperControl() {
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Button
-                  type="button"
-                  variant={config.type === "hashtag" ? "default" : "outline"}
-                  className={`h-auto p-3 flex-col ${config.type === "hashtag" ? "bg-blue-600 hover:bg-blue-700 text-white" : "hover:bg-blue-50 hover:border-blue-200"}`}
-                  onClick={() =>
-                    setConfig((prev) => ({ ...prev, type: "hashtag", query: [] }))
-                  }
-                >
-                  <div className="text-lg font-semibold mb-1">Hashtag</div>
-                  <div className="text-xs opacity-70">Search by hashtags</div>
-                </Button>
-                <Button
-                  type="button"
-                  variant={config.type === "discover" ? "default" : "outline"}
-                  className={`h-auto p-3 flex-col ${config.type === "discover" ? "bg-cyan-500 hover:bg-cyan-600 text-white" : "hover:bg-cyan-50 hover:border-cyan-200"}`}
-                  onClick={() =>
-                    setConfig((prev) => ({ ...prev, type: "discover", query: [] }))
-                  }
-                >
-                  <div className="text-lg font-semibold mb-1">Discover</div>
-                  <div className="text-xs opacity-70">Browse discover feed</div>
-                </Button>
-                <Button
-                  type="button"
-                  variant={config.type === "explore" ? "default" : "outline"}
-                  className={`h-auto p-3 flex-col ${config.type === "explore" ? "bg-purple-600 hover:bg-purple-700 text-white" : "hover:bg-purple-50 hover:border-purple-200"}`}
-                  onClick={() =>
-                    setConfig((prev) => ({ ...prev, type: "explore", query: [] }))
-                  }
-                >
-                  <div className="text-lg font-semibold mb-1">Explore</div>
-                  <div className="text-xs opacity-70">Browse explore topics</div>
-                </Button>
+            <Button
+              type="button"
+              variant={config.type === "hashtag" ? "default" : "outline"}
+              className={`h-auto p-3 flex-col ${config.type === "hashtag" ? "bg-blue-600 hover:bg-blue-700 text-white" : "hover:bg-blue-50 hover:border-blue-200"}`}
+              onClick={() =>
+                setConfig((prev) => ({ ...prev, type: "hashtag", query: [] }))
+              }
+            >
+              <div className="text-lg font-semibold mb-1">Hashtag</div>
+              <div className="text-xs opacity-70">Search by hashtags</div>
+            </Button>
+            <Button
+              type="button"
+              variant={config.type === "discover" ? "default" : "outline"}
+              className={`h-auto p-3 flex-col ${config.type === "discover" ? "bg-cyan-500 hover:bg-cyan-600 text-white" : "hover:bg-cyan-50 hover:border-cyan-200"}`}
+              onClick={() =>
+                setConfig((prev) => ({ 
+                  ...prev, 
+                  type: "discover", 
+                  query: [],
+                  provider: "clockworks" // Force clockworks for discover
+                }))
+              }
+            >
+              <div className="text-lg font-semibold mb-1">Discover</div>
+              <div className="text-xs opacity-70">Browse discover feed</div>
+            </Button>
+            <Button
+              type="button"
+              variant={config.type === "explore" ? "default" : "outline"}
+              className={`h-auto p-3 flex-col ${config.type === "explore" ? "bg-purple-600 hover:bg-purple-700 text-white" : "hover:bg-purple-50 hover:border-purple-200"}`}
+              onClick={() =>
+                setConfig((prev) => ({ 
+                  ...prev, 
+                  type: "explore", 
+                  query: [],
+                  provider: "clockworks" // Force clockworks for explore
+                }))
+              }
+            >
+              <div className="text-lg font-semibold mb-1">Explore</div>
+              <div className="text-xs opacity-70">Browse explore topics</div>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Provider Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Scraper Provider</CardTitle>
+          <CardDescription>
+            Choose which Apify actor to use for scraping
+            {config.type !== "hashtag" && (
+              <span className="block text-amber-600 mt-1">
+                Note: Apidojo only supports hashtag scraping
+              </span>
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button
+              type="button"
+              variant={config.provider === "clockworks" ? "default" : "outline"}
+              className={`h-auto p-4 flex-col ${config.provider === "clockworks" ? "bg-green-600 hover:bg-green-700 text-white" : "hover:bg-green-50 hover:border-green-200"}`}
+              onClick={() =>
+                setConfig((prev) => ({ ...prev, provider: "clockworks" }))
+              }
+            >
+              <div className="text-lg font-semibold mb-1">Clockworks</div>
+              <div className="text-xs opacity-70">Supports all scraper types</div>
+            </Button>
+            <Button
+              type="button"
+              variant={config.provider === "apidojo" ? "default" : "outline"}
+              className={`h-auto p-4 flex-col ${
+                config.type !== "hashtag" 
+                  ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-400" 
+                  : config.provider === "apidojo" 
+                    ? "bg-orange-600 hover:bg-orange-700 text-white" 
+                    : "hover:bg-orange-50 hover:border-orange-200"
+              }`}
+              disabled={config.type !== "hashtag"}
+              onClick={() => {
+                if (config.type === "hashtag") {
+                  setConfig((prev) => ({ ...prev, provider: "apidojo" }));
+                }
+              }}
+            >
+              <div className="text-lg font-semibold mb-1">Apidojo</div>
+              <div className="text-xs opacity-70">
+                {config.type === "hashtag" ? "Hashtag scraping only" : "Hashtag scraping only"}
               </div>
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
       {/* Configuration Panel */}
       <Card>
         <CardContent className="pt-4">
-          
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -359,7 +424,9 @@ export function ScraperControl() {
                         <Button
                           key={value}
                           type="button"
-                          variant={config.query.includes(value) ? "default" : "outline"}
+                          variant={
+                            config.query.includes(value) ? "default" : "outline"
+                          }
                           size="sm"
                           className="justify-start h-auto p-2 text-xs"
                           onClick={() => {
@@ -383,7 +450,11 @@ export function ScraperControl() {
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {config.query.map((q) => (
-                          <Badge key={q} variant="secondary" className="text-xs">
+                          <Badge
+                            key={q}
+                            variant="secondary"
+                            className="text-xs"
+                          >
                             {exploreValueLabels[q]}
                             <Button
                               type="button"
@@ -393,7 +464,9 @@ export function ScraperControl() {
                               onClick={() => {
                                 setConfig((prev) => ({
                                   ...prev,
-                                  query: prev.query.filter((query) => query !== q),
+                                  query: prev.query.filter(
+                                    (query) => query !== q,
+                                  ),
                                 }));
                               }}
                             >
@@ -404,13 +477,13 @@ export function ScraperControl() {
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="mt-3">
                     <button
                       type="button"
                       className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
-                        showFilters 
-                          ? "text-amber-700 bg-amber-100 border border-amber-200" 
+                        showFilters
+                          ? "text-amber-700 bg-amber-100 border border-amber-200"
                           : "text-amber-600 bg-amber-50 border border-amber-200 hover:bg-amber-100"
                       }`}
                       onClick={() => setShowFilters(!showFilters)}
@@ -423,7 +496,9 @@ export function ScraperControl() {
                 // Textarea for hashtag and discover
                 <>
                   <label className="block text-base font-medium text-slate-700 mb-2">
-                    {config.type === "hashtag" ? "Input Your Hashtags" : "Input Your Keywords"}
+                    {config.type === "hashtag"
+                      ? "Input Your Hashtags"
+                      : "Input Your Keywords"}
                   </label>
                   <textarea
                     className="w-full px-3 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-slate-500 text-xs placeholder:text-xs"
@@ -460,8 +535,8 @@ export function ScraperControl() {
                     <button
                       type="button"
                       className={`px-4 py-2 text-sm font-medium rounded transition-colors ${
-                        showFilters 
-                          ? "text-amber-700 bg-amber-100 border border-amber-200" 
+                        showFilters
+                          ? "text-amber-700 bg-amber-100 border border-amber-200"
                           : "text-amber-600 bg-amber-50 border border-amber-200 hover:bg-amber-100"
                       }`}
                       onClick={() => setShowFilters(!showFilters)}
@@ -488,7 +563,6 @@ export function ScraperControl() {
               )}
             </div>
 
-
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <div className="text-red-800">{error}</div>
@@ -510,7 +584,13 @@ export function ScraperControl() {
                 ) : (
                   <>
                     <Play className="mr-2 h-4 w-4" />
-                    {config.query.length === 0 ? (config.type === "hashtag" ? "Add Hashtags" : config.type === "discover" ? "Add Keywords" : "Add Inputs To Run Scraper") : "Start Scraper"}
+                    {config.query.length === 0
+                      ? config.type === "hashtag"
+                        ? "Add Hashtags"
+                        : config.type === "discover"
+                          ? "Add Keywords"
+                          : "Add Inputs To Run Scraper"
+                      : "Start Scraper"}
                   </>
                 )}
               </Button>
@@ -535,7 +615,9 @@ export function ScraperControl() {
         <Card>
           <CardHeader>
             <CardTitle>Filters</CardTitle>
-            <CardDescription>Set minimum thresholds for creator selection</CardDescription>
+            <CardDescription>
+              Set minimum thresholds for creator selection
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -693,4 +775,3 @@ export function ScraperControl() {
     </div>
   );
 }
-

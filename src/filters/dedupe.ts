@@ -31,18 +31,13 @@ const creatorListArray = creatorList
   .map((line) => line.split(",")[0]?.trim())
   .filter((line) => line !== "");
 
-export function dedupeAgaisntCreatorList(row: ProfileItem) {
-  const inTikTokForm = `${row.authorMeta.profileUrl}`;
+export function dedupeAgaisntCreatorList(row: AuthorMeta) {
+  const inTikTokForm = `${row.profileUrl}`;
   if (creatorListArray.includes(inTikTokForm)) {
-    console.log(
-      `${row.authorMeta.profileUrl} is in the creator list - filtering out`,
-    );
+    console.log(`${row.profileUrl} is in the creator list - filtering out`);
     return false;
   }
 
-  console.log(
-    `${row.authorMeta.profileUrl} is not in the creator list - keeping`,
-  );
+  console.log(`${row.profileUrl} is not in the creator list - keeping`);
   return true;
 }
-

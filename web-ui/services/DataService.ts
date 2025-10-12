@@ -5,12 +5,11 @@ import type { RunData } from "../types";
 interface PipelineStats {
   extracted: number;
   deduped: number;
-  qualityPass1: number;
+  minFollowersFiltered: number;
   expanded: number;
-  finalDeduped: number;
-  qualityPass2: number;
-  qualityPass3: number;
-  final: number;
+  englishCreatorsOnly: number;
+  videoMetricsFiltered: number;
+  finalWithContact: number;
 }
 
 export class DataService {
@@ -118,24 +117,23 @@ export class DataService {
 
       const stepFiles = {
         extracted: "01_extracted_profiles.json",
-        deduped: "02_deduped_profiles.json", 
-        qualityPass1: "03_quality_filtered_pass1.json",
-        expanded: "04_expanded_profiles.json",
-        finalDeduped: "05_final_deduped_video_rows.json",
-        qualityPass2: "06_quality_filtered_pass2.json",
-        qualityPass3: "07_quality_filtered_pass3.json",
-        final: "08_final_processed.json"
+        newCreatorsOnly: "02_new_creators_only.json",
+        deduped: "03_deduped_profiles.json",
+        minFollowersFiltered: "04_min_followers_filtered.json",
+        expanded: "05_expanded_profiles.json",
+        englishCreatorsOnly: "06_english_creators_only.json",
+        videoMetricsFiltered: "07_video_metrics_filtered.json",
+        finalWithContact: "08_final_with_contact.json"
       };
 
       const stats: PipelineStats = {
         extracted: 0,
         deduped: 0,
-        qualityPass1: 0,
+        minFollowersFiltered: 0,
         expanded: 0,
-        finalDeduped: 0,
-        qualityPass2: 0,
-        qualityPass3: 0,
-        final: 0
+        englishCreatorsOnly: 0,
+        videoMetricsFiltered: 0,
+        finalWithContact: 0
       };
 
       for (const [step, filename] of Object.entries(stepFiles)) {
@@ -186,12 +184,11 @@ export class DataService {
     const avgStats: PipelineStats = {
       extracted: 0,
       deduped: 0,
-      qualityPass1: 0,
+      minFollowersFiltered: 0,
       expanded: 0,
-      finalDeduped: 0,
-      qualityPass2: 0,
-      qualityPass3: 0,
-      final: 0
+      englishCreatorsOnly: 0,
+      videoMetricsFiltered: 0,
+      finalWithContact: 0
     };
 
     for (const step of Object.keys(avgStats) as (keyof PipelineStats)[]) {

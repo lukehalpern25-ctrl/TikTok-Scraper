@@ -1,4 +1,5 @@
 import { ApifyClient } from "apify-client";
+import { apifyBatchRequest } from "../utils/apifyBatchRequest";
 import type { ProfileItem, ProfileResponse } from "../interfaces/profile";
 import type { GoodQuality } from "../interfaces/qualityDeterminant";
 
@@ -11,9 +12,8 @@ export async function scrapeProfile(
 ): Promise<ProfileItem[]> {
   console.log(`Starting profile scraper`);
 
-  // scraper config
-  const config = {
-    profiles,
+  // Base scraper config (without profiles)
+  const baseConfig = {
     resultsPerPage: qualityConfig.videoLimitPerProfile,
     shouldDownloadCovers: false,
     shouldDownloadSlideshowImages: false,
@@ -25,18 +25,22 @@ export async function scrapeProfile(
   console.log(
     `Scraper configured - ${profiles.length} profiles, ${qualityConfig.videoLimitPerProfile} videos per profile`,
   );
-  console.log(`Initiating TikTok profile scraper...`);
-  const resp = await client
-    .actor("clockworks/tiktok-profile-scraper")
-    .call(config);
 
-  console.log(`Profile scraping completed - retrieving dataset`);
+  // Use batch request utility
+  // Note: apidojo/tiktok-profile-scraper is used for profile expansion when initial scraping used apidojo
+  const actorId = qualityConfig.provider === "apidojo"
+    ? "apidojo/tiktok-profile-scraper" 
+    : "clockworks/tiktok-profile-scraper";
+    
+  const batchResult = await apifyBatchRequest(client, {
+    actorId,
+    queries: profiles,
+    baseConfig,
+    queryFieldName: "profiles",
+    batchSize: 7, // Split into 7 parallel requests
+  });
 
-  // using limit 0 to just get everything in 1 go skips the multiple round trips
-  const dataset = (await client
-    .dataset(resp.defaultDatasetId)
-    .listItems({ limit: 0 })) as unknown as ProfileResponse;
-  console.log(`Profile dataset retrieved: ${dataset.count} items`);
+  console.log(`Profile dataset retrieved: ${batchResult.count} items (${batchResult.successfulRequests}/${profiles.length} successful requests)`);
 
-  return dataset.items;
+  return batchResult.items;
 }

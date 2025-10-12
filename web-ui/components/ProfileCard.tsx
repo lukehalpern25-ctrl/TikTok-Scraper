@@ -99,7 +99,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           <h3 className="font-semibold text-sm text-gray-900 m-0">
             {authorMeta.nickName || authorMeta.name || "Unknown"}
             {authorMeta.verified && (
-              
+              <span className="ml-1 text-blue-500">✓</span>
             )}
           </h3>
           <p className="text-xs text-gray-500 my-0.5">
