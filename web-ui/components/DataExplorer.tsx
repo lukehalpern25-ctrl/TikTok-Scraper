@@ -578,7 +578,19 @@ export function DataExplorer() {
                         selectedStep}
                     </h3>
                     <p className="text-gray-600">
-                      {filteredAndSortedData.length} items
+                      {(() => {
+                        // Calculate unique creators count for display
+                        const seenCreatorIds = new Set();
+                        const uniqueCount = filteredAndSortedData.filter((item) => {
+                          const creatorId = item.authorMeta?.id;
+                          if (!creatorId || seenCreatorIds.has(creatorId)) {
+                            return false;
+                          }
+                          seenCreatorIds.add(creatorId);
+                          return true;
+                        }).length;
+                        return `${uniqueCount} unique creators`;
+                      })()}
                     </p>
                   </div>
                   <div className="flex gap-2 flex-wrap">
@@ -690,21 +702,50 @@ export function DataExplorer() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredAndSortedData.slice(0, 50).map((item, index) => (
-                      <ProfileCard key={index} profile={item} />
-                    ))}
+                    {(() => {
+                      // Filter for unique creators based on authorMeta.id
+                      const seenCreatorIds = new Set();
+                      const uniqueCreators = filteredAndSortedData.filter((item) => {
+                        const creatorId = item.authorMeta?.id;
+                        if (!creatorId || seenCreatorIds.has(creatorId)) {
+                          return false;
+                        }
+                        seenCreatorIds.add(creatorId);
+                        return true;
+                      });
+                      
+                      return uniqueCreators.slice(0, 50).map((item, index) => (
+                        <ProfileCard key={item.authorMeta?.id || index} profile={item} />
+                      ));
+                    })()}
                   </div>
                 )}
               </div>
 
-              {filteredAndSortedData.length > 50 && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg text-center">
-                  <p className="text-gray-500 text-sm">
-                    Showing first 50 of {filteredAndSortedData.length} results.
-                    Use export to get all data.
-                  </p>
-                </div>
-              )}
+              {(() => {
+                // Calculate unique creators for bottom message
+                const seenCreatorIds = new Set();
+                const uniqueCreators = filteredAndSortedData.filter((item) => {
+                  const creatorId = item.authorMeta?.id;
+                  if (!creatorId || seenCreatorIds.has(creatorId)) {
+                    return false;
+                  }
+                  seenCreatorIds.add(creatorId);
+                  return true;
+                });
+                
+                if (uniqueCreators.length > 50) {
+                  return (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg text-center">
+                      <p className="text-gray-500 text-sm">
+                        Showing first 50 of {uniqueCreators.length} unique creators.
+                        Use export to get all data.
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           )}
         </>
