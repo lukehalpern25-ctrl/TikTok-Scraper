@@ -169,7 +169,7 @@ program
       }
     }
 
-    // Validate provider compatibility
+    // Validate provider compatibility (NOTE: not used at the moment but added for future use)
     if (options.provider === "apidojo" && options.type !== "hashtag") {
       throw new Error("Apidojo provider only supports hashtag scraping. Please use clockworks provider for discover and explore scraping.");
     }

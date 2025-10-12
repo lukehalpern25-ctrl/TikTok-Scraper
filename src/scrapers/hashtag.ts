@@ -27,12 +27,9 @@ export async function hashtag(options: CliOptions) {
   );
 
   // Use batch request utility
-  const actorId = options.provider === "apidojo" 
-    ? "apidojo/tiktok-scraper" 
-    : "clockworks/tiktok-hashtag-scraper";
-    
+  // Note: Provider option exists but always uses clockworks for now
   const batchResult = await apifyBatchRequest(client, {
-    actorId,
+    actorId: "clockworks/tiktok-hashtag-scraper",
     queries: options.query,
     baseConfig,
     queryFieldName: "hashtags",

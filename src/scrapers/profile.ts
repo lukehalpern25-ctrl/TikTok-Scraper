@@ -27,13 +27,9 @@ export async function scrapeProfile(
   );
 
   // Use batch request utility
-  // Note: apidojo/tiktok-profile-scraper is used for profile expansion when initial scraping used apidojo
-  const actorId = qualityConfig.provider === "apidojo"
-    ? "apidojo/tiktok-profile-scraper" 
-    : "clockworks/tiktok-profile-scraper";
-    
+  // Note: Provider option exists but always uses clockworks for now
   const batchResult = await apifyBatchRequest(client, {
-    actorId,
+    actorId: "clockworks/tiktok-profile-scraper",
     queries: profiles,
     baseConfig,
     queryFieldName: "profiles",
