@@ -16,3 +16,4 @@ export interface AuthorMeta {
   video: number;
   digg: number;
 }
+

@@ -91,3 +91,4 @@ export interface HashtagResponse {
   items: HashtagItem[];
   count: number;
 }
+

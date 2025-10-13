@@ -36,7 +36,9 @@ export async function scrapeProfile(
     batchSize: 7, // Split into 7 parallel requests
   });
 
-  console.log(`Profile dataset retrieved: ${batchResult.count} items (${batchResult.successfulRequests}/${profiles.length} successful requests)`);
+  console.log(
+    `Profile dataset retrieved: ${batchResult.count} items (${batchResult.successfulRequests}/${profiles.length} successful requests)`,
+  );
 
   return batchResult.items;
 }

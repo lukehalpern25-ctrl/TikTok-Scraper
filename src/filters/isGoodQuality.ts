@@ -55,7 +55,7 @@ export function checkQualityFromAggregatedView(
     videoRowsByAuthorId.get(authorId)!.push(videoRow);
   }
 
-    const passingProfiles: ProfileItem[] = [];
+  const passingProfiles: ProfileItem[] = [];
 
   // Check each author's aggregated metrics
   for (const [authorId, authorVideoRows] of videoRowsByAuthorId) {

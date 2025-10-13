@@ -155,7 +155,7 @@ program
       }
       return value;
     },
-    "clockworks"
+    "clockworks",
   )
   .action(async (options: CliOptions) => {
     console.log(
@@ -165,18 +165,25 @@ program
 
     if (options.type === "explore") {
       if (options.query.some((query) => !validExploreCalues.includes(query))) {
-        throw new Error("Invalid explore query, valid values are: " + validExploreCalues.join(", "));
+        throw new Error(
+          "Invalid explore query, valid values are: " +
+            validExploreCalues.join(", "),
+        );
       }
     }
 
-    // Validate provider compatibility (NOTE: not used at the moment but added for future use)
+    // Validate provider compatibility
     if (options.provider === "apidojo" && options.type !== "hashtag") {
-      throw new Error("Apidojo provider only supports hashtag scraping. Please use clockworks provider for discover and explore scraping.");
+      throw new Error(
+        "Apidojo provider only supports hashtag scraping. Please use clockworks provider for discover and explore scraping.",
+      );
     }
 
     // check that videoLimitPerProfile is less than or equal to limitPerQuery
     if (options.videoLimitPerProfile < options.minNoOfVideosInWindow) {
-      throw new Error("The minNoOfVideosInWindow must be less than or equal to the videoLimitPerProfile");
+      throw new Error(
+        "The minNoOfVideosInWindow must be less than or equal to the videoLimitPerProfile",
+      );
     }
 
     switch (options.type) {

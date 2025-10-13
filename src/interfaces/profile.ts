@@ -8,7 +8,7 @@ export type AuthorMetaInProfile = AuthorMeta & {
   roomId: string;
   ttSeller: boolean;
   commerceUserInfo?: CommerceUserInfo;
-}
+};
 
 export interface MusicMeta {
   musicName: string;
@@ -100,4 +100,3 @@ export interface ProfileResponse {
   items: ProfileItem[];
   count: number;
 }
-

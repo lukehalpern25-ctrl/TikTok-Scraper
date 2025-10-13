@@ -21,7 +21,7 @@ export async function hashtag(options: CliOptions) {
     shouldDownloadSubtitles: false,
     shouldDownloadVideos: false,
   };
-  
+
   console.log(
     `Scraper configured - targeting ${options.limitPerQuery} results per hashtag (${options.query.join(", ")})`,
   );
@@ -41,10 +41,16 @@ export async function hashtag(options: CliOptions) {
     items: batchResult.items,
     count: batchResult.count,
   };
-  
-  console.log(`Dataset retrieved: ${dataset.count} raw items (${batchResult.successfulRequests}/${options.query.length} successful requests)`);
 
-  const { final, timestamp } = await postProcess({ hashtags: options.query, ...baseConfig }, options, dataset);
+  console.log(
+    `Dataset retrieved: ${dataset.count} raw items (${batchResult.successfulRequests}/${options.query.length} successful requests)`,
+  );
+
+  const { final, timestamp } = await postProcess(
+    { hashtags: options.query, ...baseConfig },
+    options,
+    dataset,
+  );
 
   console.log("Saving results");
 
