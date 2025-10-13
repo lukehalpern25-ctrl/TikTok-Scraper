@@ -8,6 +8,7 @@ interface ScraperConfig {
   limitPerQuery: number;
   query: string[];
   type: ScraperType;
+  provider: "clockworks" | "apidojo";
 
   // First pass filters
   minFollowers: number;
@@ -75,6 +76,8 @@ export class ScraperRunner {
         config.minNoOfVideosInWindow.toString(),
         "--type",
         config.type,
+        "--provider",
+        config.provider,
       ];
 
       this.log(`📋 Command: bun ${args.join(" ")}`);

@@ -16,7 +16,7 @@ function pass1IsGood(row: AuthorMeta, config: GoodQuality) {
 }
 
 function pass2IsGood(row: ProfileItem, config: GoodQuality) {
-  if (config.removeNonEnglish && row.textLanguage !== "en") {
+  if (config.removeNonEnglish && (row.textLanguage !== "en" && row.textLanguage !== "un")) {
     console.log(
       `Quality check pass 2 failed: expected languages 'en' received ${row.textLanguage}`,
     );

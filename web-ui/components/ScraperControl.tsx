@@ -106,7 +106,7 @@ export function ScraperControl() {
   const [config, setConfig] = useState<ScraperConfig>({
     // Basic config
     // limitPerQuery: 380,
-    limitPerQuery: 30,
+    limitPerQuery: 20,
     query: [],
     type: "hashtag",
     provider: "clockworks",
@@ -314,11 +314,11 @@ export function ScraperControl() {
               variant={config.type === "discover" ? "default" : "outline"}
               className={`h-auto p-3 flex-col ${config.type === "discover" ? "bg-cyan-500 hover:bg-cyan-600 text-white" : "hover:bg-cyan-50 hover:border-cyan-200"}`}
               onClick={() =>
-                setConfig((prev) => ({ 
-                  ...prev, 
-                  type: "discover", 
+                setConfig((prev) => ({
+                  ...prev,
+                  type: "discover",
                   query: [],
-                  provider: "clockworks" // Force clockworks for discover
+                  provider: "clockworks", // Force clockworks for discover
                 }))
               }
             >
@@ -330,11 +330,11 @@ export function ScraperControl() {
               variant={config.type === "explore" ? "default" : "outline"}
               className={`h-auto p-3 flex-col ${config.type === "explore" ? "bg-purple-600 hover:bg-purple-700 text-white" : "hover:bg-purple-50 hover:border-purple-200"}`}
               onClick={() =>
-                setConfig((prev) => ({ 
-                  ...prev, 
-                  type: "explore", 
+                setConfig((prev) => ({
+                  ...prev,
+                  type: "explore",
                   query: [],
-                  provider: "clockworks" // Force clockworks for explore
+                  provider: "clockworks", // Force clockworks for explore
                 }))
               }
             >
@@ -369,16 +369,18 @@ export function ScraperControl() {
               }
             >
               <div className="text-lg font-semibold mb-1">Clockworks</div>
-              <div className="text-xs opacity-70">Supports all scraper types</div>
+              <div className="text-xs opacity-70">
+                Supports all scraper types
+              </div>
             </Button>
             <Button
               type="button"
               variant={config.provider === "apidojo" ? "default" : "outline"}
               className={`h-auto p-4 flex-col ${
-                config.type !== "hashtag" 
-                  ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-400" 
-                  : config.provider === "apidojo" 
-                    ? "bg-orange-600 hover:bg-orange-700 text-white" 
+                config.type !== "hashtag"
+                  ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-400"
+                  : config.provider === "apidojo"
+                    ? "bg-orange-600 hover:bg-orange-700 text-white"
                     : "hover:bg-orange-50 hover:border-orange-200"
               }`}
               disabled={config.type !== "hashtag"}
@@ -390,7 +392,9 @@ export function ScraperControl() {
             >
               <div className="text-lg font-semibold mb-1">Apidojo</div>
               <div className="text-xs opacity-70">
-                {config.type === "hashtag" ? "Hashtag scraping only" : "Hashtag scraping only"}
+                {config.type === "hashtag"
+                  ? "Hashtag scraping only"
+                  : "Hashtag scraping only"}
               </div>
             </Button>
           </div>
