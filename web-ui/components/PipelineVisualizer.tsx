@@ -101,7 +101,20 @@ export function PipelineVisualizer({
     for (let i = 0; i < updatedSteps.length; i++) {
       try {
         const data = await api.getStepData(runTimestamp, updatedSteps[i].file);
-        const count = Array.isArray(data) ? data.length : 0;
+        // Calculate unique creators count
+        let count = 0;
+        if (Array.isArray(data)) {
+          const seenCreatorIds = new Set();
+          count = data.filter((item) => {
+            console.log(item);
+            const creatorId = item.authorMeta?.id ?? item.id;
+            if (!creatorId || seenCreatorIds.has(creatorId)) {
+              return false;
+            }
+            seenCreatorIds.add(creatorId);
+            return true;
+          }).length;
+        }
         updatedSteps[i].count = count;
 
         // Calculate retention rate compared to first step
@@ -162,7 +175,7 @@ export function PipelineVisualizer({
             const status = getStepStatus(step, index);
             const count =
               step.count !== undefined
-                ? ` (${step.count.toLocaleString()} items)`
+                ? ` (${step.count.toLocaleString()} unique creators)`
                 : "";
             const statusIcon =
               status === "success"
