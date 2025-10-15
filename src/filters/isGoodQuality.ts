@@ -67,7 +67,7 @@ export function checkQualityFromAggregatedView(
       (videoRow) => videoRow.createTime * 1000 >= cutoffTime,
     );
 
-    // Check minimum number of videos in window
+    // Check minimum number of videos in window (use to determine if a creator is very active in window)
     if (videosInWindow.length < config.minNoOfVideosInWindow) {
       console.log(
         `Quality check aggregation failed for ${authorId}: ${videosInWindow.length} videos < ${config.minNoOfVideosInWindow} required in window`,
@@ -75,8 +75,10 @@ export function checkQualityFromAggregatedView(
       continue;
     }
 
+    // The values below use the actual total videos retrieved not the filtered ones in window
+
     // Check minimum video views for each video
-    const hasVideosBelowMinViews = videosInWindow.some(
+    const hasVideosBelowMinViews = authorVideoRows.some(
       (profile) => profile.playCount < config.minVideoViews,
     );
 
@@ -88,11 +90,11 @@ export function checkQualityFromAggregatedView(
     }
 
     // Calculate average views
-    const totalViews = videosInWindow.reduce(
+    const totalViews = authorVideoRows.reduce(
       (sum, profile) => sum + profile.playCount,
       0,
     );
-    const avgViews = totalViews / videosInWindow.length;
+    const avgViews = totalViews / authorVideoRows.length;
 
     // Check minimum average views
     if (avgViews < config.minAvgViews) {
