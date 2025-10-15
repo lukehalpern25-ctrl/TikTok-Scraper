@@ -26,6 +26,11 @@ export class ScraperRoutes {
       return this.scraperController.stopScraper();
     }
     
+    // POST /api/scraper/resume
+    if (url.pathname === "/api/scraper/resume" && request.method === "POST") {
+      return this.scraperController.resumeScraper(request);
+    }
+    
     return null;
   }
 }

@@ -45,11 +45,41 @@ export async function discover(options: CliOptions) {
     `Dataset retrieved: ${dataset.count} raw items (${batchResult.successfulRequests}/${options.query.length} successful requests)`,
   );
 
-  const { final, timestamp } = await postProcess(
+  // Save raw dataset and handle debug pause
+  let timestamp = Date.now();
+  if (options.debugMode) {
+    const intermediaryPath = `./out/intermediary/${timestamp}`;
+    writeData(
+      path.join(intermediaryPath, "00_raw_dataset.json"),
+      JSON.stringify(dataset, null, 2),
+    );
+    
+    console.log(`🐛 DEBUG: Raw dataset saved to ${intermediaryPath}/00_raw_dataset.json`);
+    
+    if (options.pauseAtStage === "raw-data") {
+      console.log("🔴 DEBUG: Paused after raw data collection");
+      console.log(`Scraped ${dataset.count} items from ${dataset.items.length} videos`);
+      console.log(`Resume with: --resumeFromStage raw-data --resumeTimestamp ${timestamp}`);
+      return; // Exit early, don't proceed to postProcess
+    }
+  }
+
+  const result = await postProcess(
     { hashtags: options.query, ...baseConfig },
     options,
     dataset,
+    undefined,
+    options.debugMode ? timestamp : undefined
   );
+  
+  // Use the timestamp from postProcess if not in debug mode
+  timestamp = result.timestamp;
+
+  // If the process was paused, don't save results
+  if (result.paused) {
+    console.log("🔴 DEBUG: Processing paused - no final results to save");
+    return;
+  }
 
   console.log("Saving results");
 
@@ -58,8 +88,8 @@ export async function discover(options: CliOptions) {
   const fileName = `${timestamp}.json`;
   const fullPath = path.join(outputPath, fileName);
 
-  writeData(fullPath, JSON.stringify(final));
+  writeData(fullPath, JSON.stringify(result.final));
   console.log(
-    `Discovery process complete - ${final.processed.length} creators found and saved to ${fullPath}`,
+    `Discovery process complete - ${result.final.processed.length} creators found and saved to ${fullPath}`,
   );
 }

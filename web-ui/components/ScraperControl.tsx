@@ -60,6 +60,12 @@ interface ScraperConfig {
   videoLimitPerProfile: number;
   includePinnedVideos: boolean;
   timeWindowInDays: number;
+
+  // Debug mode options
+  debugMode: boolean;
+  pauseAtStage?: string;
+  resumeFromStage?: string;
+  resumeTimestamp?: string;
 }
 
 // LocalStorage helpers for saving/loading configurations
@@ -126,6 +132,12 @@ export function ScraperControl() {
     videoLimitPerProfile: 5,
     includePinnedVideos: false,
     timeWindowInDays: 30,
+
+    // Debug mode options
+    debugMode: false,
+    pauseAtStage: undefined,
+    resumeFromStage: undefined,
+    resumeTimestamp: undefined,
   });
   const [queryInput, setQueryInput] = useState("");
   const [status, setStatus] = useState<ScraperStatus>({
@@ -152,6 +164,15 @@ export function ScraperControl() {
           ...prev,
           progress: message.data.progress,
           currentStep: message.data.step,
+        }));
+      } else if (message.type === "paused") {
+        setStatus((prev) => ({
+          ...prev,
+          paused: true,
+          pausedAt: message.data.stage,
+          pausedTimestamp: message.data.timestamp,
+          canResume: true,
+          currentStep: `Paused at: ${message.data.stageName}`
         }));
       }
     });
@@ -273,6 +294,17 @@ export function ScraperControl() {
       await api.stopScraper();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to stop scraper");
+    }
+  };
+
+  const resumeScraper = async (fromStage?: string) => {
+    try {
+      setError(null);
+      const resumeStage = fromStage || status.pausedAt || "raw-data";
+      await api.resumeScraper(resumeStage, config);
+      setLogs([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to resume scraper");
     }
   };
 
@@ -574,43 +606,162 @@ export function ScraperControl() {
             )}
 
             {/* Control Buttons */}
-            <div className="flex gap-2 mt-12">
-              <Button
-                type="submit"
-                disabled={status.running}
-                className={`flex-1 h-12 text-base font-semibold ${config.query.length === 0 ? "bg-slate-300 hover:bg-slate-400 text-slate-600" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
-              >
-                {status.running ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Running...
-                  </>
-                ) : (
-                  <>
-                    <Play className="mr-2 h-4 w-4" />
-                    {config.query.length === 0
-                      ? config.type === "hashtag"
-                        ? "Add Hashtags"
-                        : config.type === "discover"
-                          ? "Add Keywords"
-                          : "Add Inputs To Run Scraper"
-                      : "Start Scraper"}
-                  </>
-                )}
-              </Button>
+            <div className="space-y-4 mt-12">
+              {/* Paused State - Resume Options */}
+              {status.paused && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                    <span className="font-medium text-orange-800">
+                      Scraper Paused at: {status.currentStep}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => resumeScraper()}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Play className="mr-2 h-4 w-4" />
+                      Resume Processing
+                    </Button>
+                    <Button
+                      onClick={() => resumeScraper("final")}
+                      variant="outline"
+                      className="border-green-200 text-green-700 hover:bg-green-50"
+                    >
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      Skip to Final
+                    </Button>
+                    <Button
+                      onClick={stopScraper}
+                      variant="outline"
+                      className="border-red-200 text-red-700 hover:bg-red-50"
+                    >
+                      <Square className="mr-2 h-4 w-4" />
+                      Cancel
+                    </Button>
+                  </div>
+                  <div className="mt-2 text-xs text-orange-600">
+                    💡 Resume will continue from where it paused, or skip to final processing stage
+                  </div>
+                </div>
+              )}
 
-              {status.running && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={stopScraper}
-                >
-                  <Square className="mr-2 h-4 w-4" />
-                  Stop
-                </Button>
+              {/* Normal Controls */}
+              {!status.paused && (
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    disabled={status.running}
+                    className={`flex-1 h-12 text-base font-semibold ${config.query.length === 0 ? "bg-slate-300 hover:bg-slate-400 text-slate-600" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
+                  >
+                    {status.running ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Running...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="mr-2 h-4 w-4" />
+                        {config.query.length === 0
+                          ? config.type === "hashtag"
+                            ? "Add Hashtags"
+                            : config.type === "discover"
+                              ? "Add Keywords"
+                              : "Add Inputs To Run Scraper"
+                          : "Start Scraper"}
+                      </>
+                    )}
+                  </Button>
+
+                  {status.running && (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={stopScraper}
+                    >
+                      <Square className="mr-2 h-4 w-4" />
+                      Stop
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Debug Mode */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Debug Mode</CardTitle>
+          <CardDescription>
+            Pause and resume scraper at specific stages for debugging and development
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="debugMode"
+                checked={config.debugMode}
+                onChange={(e) =>
+                  setConfig((prev) => ({
+                    ...prev,
+                    debugMode: e.target.checked,
+                    pauseAtStage: e.target.checked ? "raw-data" : undefined,
+                  }))
+                }
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="debugMode" className="text-sm font-medium text-gray-700">
+                Enable Debug Mode
+              </label>
+            </div>
+            
+            {config.debugMode && (
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Pause at Stage
+                  </label>
+                  <Select
+                    value={config.pauseAtStage || ""}
+                    onValueChange={(value) =>
+                      setConfig((prev) => ({ ...prev, pauseAtStage: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select stage to pause at" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="raw-data">After Raw Data Collection</SelectItem>
+                      <SelectItem value="extraction">After Profile Extraction</SelectItem>
+                      <SelectItem value="deduplication">After Deduplication</SelectItem>
+                      <SelectItem value="quality-filter-1">After First Quality Filter</SelectItem>
+                      <SelectItem value="profile-expansion">After Profile Expansion</SelectItem>
+                      <SelectItem value="quality-filter-2">After Second Quality Filter</SelectItem>
+                      <SelectItem value="quality-filter-3">After Third Quality Filter</SelectItem>
+                      <SelectItem value="final">After Contact Filter</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div className="text-sm text-yellow-800">
+                    💡 <strong>Debug Mode Benefits:</strong>
+                    <ul className="mt-1 ml-4 list-disc text-xs">
+                      <li>Save API costs by avoiding re-scraping</li>
+                      <li>Test different filter settings on same data</li>
+                      <li>Inspect intermediate processing stages</li>
+                      <li>Debug issues without full re-runs</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -693,8 +844,16 @@ export function ScraperControl() {
               <CardDescription>Real-time scraper progress</CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant={status.running ? "default" : "secondary"}>
-                {status.running ? "Running" : "Idle"}
+              <Badge variant={
+                status.running ? "default" : 
+                status.paused ? "default" : 
+                "secondary"
+              } className={
+                status.paused ? "bg-orange-500 hover:bg-orange-600" : ""
+              }>
+                {status.running ? "Running" : 
+                 status.paused ? "Paused" : 
+                 "Idle"}
               </Badge>
               {status.progress !== undefined && (
                 <span className="text-sm font-medium text-slate-900">

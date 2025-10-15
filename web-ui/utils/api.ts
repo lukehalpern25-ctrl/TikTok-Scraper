@@ -70,6 +70,17 @@ class ApiClient {
     if (!response.ok) throw new Error('Failed to stop scraper');
   }
 
+  async resumeScraper(stage: string, config: any): Promise<void> {
+    const response = await fetch(`${this.baseUrl}/api/scraper/resume`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ stage, config }),
+    });
+    if (!response.ok) throw new Error('Failed to resume scraper');
+  }
+
   async getPipelineStats(): Promise<any> {
     const response = await fetch(`${this.baseUrl}/api/pipeline-stats`);
     if (!response.ok) throw new Error('Failed to fetch pipeline stats');

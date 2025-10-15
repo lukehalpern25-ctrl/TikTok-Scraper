@@ -11,6 +11,12 @@ export interface ScraperStatus {
   currentStep?: string;
   progress?: number;
   logs?: string[];
+  // Debug/pause state
+  paused?: boolean;
+  pausedAt?: string; // stage name
+  pausedTimestamp?: string;
+  availableStages?: string[];
+  canResume?: boolean;
 }
 
 export interface WebSocketCallbacks {

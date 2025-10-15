@@ -25,12 +25,19 @@ interface ScraperConfig {
   videoLimitPerProfile: number;
   includePinnedVideos: boolean;
   timeWindowInDays: number;
+
+  // Debug mode options
+  debugMode: boolean;
+  pauseAtStage?: string;
+  resumeFromStage?: string;
+  resumeTimestamp?: string;
 }
 
 interface ScraperCallbacks {
   onProgress?: (progress: number, step: string) => void;
   onLog?: (log: string) => void;
   onComplete?: (success: boolean, error?: string) => void;
+  onPaused?: (stage: string, timestamp: string) => void;
 }
 
 let currentProcess: any = null;
@@ -78,7 +85,19 @@ export class ScraperRunner {
         config.type,
         "--provider",
         config.provider,
+        "--debugMode",
+        config.debugMode.toString(),
       ];
+
+      // Add debug parameters if present
+      if (config.debugMode && config.pauseAtStage) {
+        args.push("--pauseAtStage", config.pauseAtStage);
+      }
+      
+      if (config.resumeFromStage && config.resumeTimestamp) {
+        args.push("--resumeFromStage", config.resumeFromStage);
+        args.push("--resumeTimestamp", config.resumeTimestamp);
+      }
 
       this.log(`📋 Command: bun ${args.join(" ")}`);
       this.updateProgress(5, "Starting scraper process...");
@@ -245,6 +264,59 @@ export class ScraperRunner {
     ) {
       currentProgress = Math.max(currentProgress, 1);
       currentStep = "Starting scraper...";
+    }
+
+    // Handle debug mode messages
+    if (logText.includes("🐛 debug mode enabled")) {
+      currentStep = "Debug mode enabled - will pause at specified stage";
+    }
+
+    if (logText.includes("🔴 debug: paused after raw data collection")) {
+      currentProgress = 10;
+      currentStep = "Paused after raw data collection";
+    }
+
+    if (logText.includes("🔴 debug: paused at stage:")) {
+      currentProgress = 50;
+      currentStep = "Paused at processing stage";
+    }
+
+    if (logText.includes("🔄 resuming") && logText.includes("from stage:")) {
+      currentProgress = 5;
+      currentStep = "Resuming from saved stage...";
+    }
+
+    // Detect pause conditions and extract information
+    if (logText.includes("🔴 debug: paused")) {
+      console.log("Debug pause detected in line:", line);
+      
+      // Try to extract stage and timestamp from the log line
+      let stage = "raw-data";
+      let timestamp = "";
+      
+      // Check for "Paused after raw data collection"
+      if (logText.includes("paused after raw data collection")) {
+        stage = "raw-data";
+      }
+      // Check for "Paused at stage: X"
+      else {
+        const stageMatch = line.match(/paused at stage: ([\w-]+)/i);
+        if (stageMatch) {
+          stage = stageMatch[1];
+        }
+      }
+      
+      // Extract timestamp
+      const timestampMatch = line.match(/resumeTimestamp (\d+)/);
+      if (timestampMatch) {
+        timestamp = timestampMatch[1];
+      }
+      
+      console.log("Extracted pause info:", { stage, timestamp });
+      
+      if (timestamp) {
+        this.callbacks.onPaused?.(stage, timestamp);
+      }
     }
 
     if (logText.includes("scraper configured - targeting")) {
