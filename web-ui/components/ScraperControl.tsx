@@ -345,6 +345,66 @@ export function ScraperControl() {
         </CardContent>
       </Card>
 
+      {/* Saved Configurations */}
+      {savedConfigs.length > 0 && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-700">
+            Saved Configurations
+          </label>
+          <div className="flex gap-2">
+            <select
+              className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  const selectedConfig = savedConfigs.find(c => c.timestamp.toString() === e.target.value);
+                  if (selectedConfig) {
+                    restoreConfig(selectedConfig);
+                  }
+                }
+              }}
+            >
+              <option value="">Load saved configuration...</option>
+              {savedConfigs.map((savedConfig) => (
+                <option key={savedConfig.timestamp} value={savedConfig.timestamp.toString()}>
+                  {savedConfig.label}
+                </option>
+              ))}
+            </select>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                saveConfigToLocalStorage(config);
+                setSavedConfigs(getSavedConfigs(config.type));
+              }}
+              className="flex-shrink-0"
+            >
+              Save Current
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Save Configuration Button for empty state */}
+      {savedConfigs.length === 0 && (
+        <div className="space-y-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              saveConfigToLocalStorage(config);
+              setSavedConfigs(getSavedConfigs(config.type));
+            }}
+            className="w-full"
+          >
+            Save Current Configuration
+          </Button>
+        </div>
+      )}
+
       {/* Provider Selection */}
       <Card>
         <CardHeader>
