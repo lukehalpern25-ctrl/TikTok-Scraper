@@ -60,7 +60,7 @@ export async function scrapeProfile(
       queries: profiles,
       baseConfig,
       queryFieldName: "profiles",
-      batchSize: 7, // Split into 7 parallel requests
+      batchSize: 30, // Split into 30 parallel requests
     });
 
     console.log(

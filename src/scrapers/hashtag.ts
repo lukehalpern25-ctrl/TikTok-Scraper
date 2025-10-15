@@ -71,7 +71,7 @@ export async function hashtag(options: CliOptions) {
       queries: options.query,
       baseConfig,
       queryFieldName: "hashtags",
-      batchSize: 7, // Split into 7 parallel requests
+      batchSize: 30, // Split into 30 parallel requests
     });
 
     // Create dataset response in expected format

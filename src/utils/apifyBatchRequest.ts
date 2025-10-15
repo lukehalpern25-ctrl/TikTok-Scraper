@@ -24,7 +24,7 @@ export async function apifyBatchRequest(
     queries,
     baseConfig,
     queryFieldName,
-    batchSize = 7,
+    batchSize,
   } = config;
 
   console.log(
