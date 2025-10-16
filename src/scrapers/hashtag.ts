@@ -5,6 +5,7 @@ import { postProcess } from "../utils/postProcess";
 import { apifyBatchRequest } from "../utils/apifyBatchRequest";
 import { apiDojoBatchRequest } from "../utils/apiDojoBatchRequest";
 import { mapApiDojoHashtagToClockworks } from "../utils/apiDojoMappers";
+import { updateCreatorCsv } from "../utils/updateCreatorCsv";
 import type { CliOptions } from "../interfaces/cliOptions";
 import type { HashtagResponse } from "../interfaces/hashtag";
 import type { APIDojoHashTag } from "../interfaces/apidojo_hashtag";
@@ -99,7 +100,15 @@ export async function hashtag(options: CliOptions) {
   const fullPath = path.join(outputPath, fileName);
 
   writeData(fullPath, JSON.stringify(final, null, 2));
+
+  // Update the creator list CSV with new creators
+  const addedToCSV = updateCreatorCsv(final.processed);
+
   console.log(
     `Hashtag process complete - ${final.processed.length} creators found and saved to ${fullPath}`,
   );
+
+  if (addedToCSV > 0) {
+    console.log(`📝 Updated creator list CSV with ${addedToCSV} new creators`);
+  }
 }

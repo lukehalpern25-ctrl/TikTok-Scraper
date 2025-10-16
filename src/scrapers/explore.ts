@@ -3,6 +3,7 @@ import path from "path";
 import { writeData } from "../utils/writeData";
 import { postProcess } from "../utils/postProcess";
 import { apifyBatchRequest } from "../utils/apifyBatchRequest";
+import { updateCreatorCsv } from "../utils/updateCreatorCsv";
 import type { CliOptions } from "../interfaces/cliOptions";
 import type { ExploreResponse } from "../interfaces/explore";
 
@@ -59,7 +60,15 @@ export async function explore(options: CliOptions) {
   const fullPath = path.join(outputPath, fileName);
 
   writeData(fullPath, JSON.stringify(final));
+
+  // Update the creator list CSV with new creators
+  const addedToCSV = updateCreatorCsv(final.processed);
+
   console.log(
     `explore process complete - ${final.processed.length} creators found and saved to ${fullPath}`,
   );
+
+  if (addedToCSV > 0) {
+    console.log(`📝 Updated creator list CSV with ${addedToCSV} new creators`);
+  }
 }
