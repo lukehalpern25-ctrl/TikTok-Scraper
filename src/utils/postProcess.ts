@@ -67,24 +67,35 @@ export async function postProcess(
     JSON.stringify(qualityFiltered, null, 2),
   );
 
+  const maxFollowersFiltered = qualityFiltered.filter((r) =>
+    isGoodQuality(qualityConfig, { row: r, pass: 2 }),
+  );
+  console.log(
+    `After maximum followers filter: ${maxFollowersFiltered.length} profiles`,
+  );
+  writeData(
+    path.join(intermediaryPath, "05_max_followers_filtered.json"),
+    JSON.stringify(maxFollowersFiltered, null, 2),
+  );
+
   console.log(`Expanding profiles with additional data...`);
-  const expanded = await expandProfile(qualityFiltered, qualityConfig);
+  const expanded = await expandProfile(maxFollowersFiltered, qualityConfig);
   console.log(
     `Profile expansion complete: ${expanded.length} enhanced profiles`,
   );
   writeData(
-    path.join(intermediaryPath, "05_expanded_profiles.json"),
+    path.join(intermediaryPath, "06_expanded_profiles.json"),
     JSON.stringify(expanded, null, 2),
   );
 
   const secondQualityFiltered = expanded.filter((r) =>
-    isGoodQuality(qualityConfig, { row: r, pass: 2 }),
+    isGoodQuality(qualityConfig, { row: r, pass: 3 }),
   );
   console.log(
     `After non-English removal: ${secondQualityFiltered.length} English creators`,
   );
   writeData(
-    path.join(intermediaryPath, "06_english_creators_only.json"),
+    path.join(intermediaryPath, "07_english_creators_only.json"),
     JSON.stringify(secondQualityFiltered, null, 2),
   );
 
@@ -96,7 +107,7 @@ export async function postProcess(
     `After video metrics filter: ${aggQualityFiltered.length} high-quality creators`,
   );
   writeData(
-    path.join(intermediaryPath, "07_video_metrics_filtered.json"),
+    path.join(intermediaryPath, "08_video_metrics_filtered.json"),
     JSON.stringify(aggQualityFiltered, null, 2),
   );
 
@@ -107,7 +118,7 @@ export async function postProcess(
     `After contact filter: ${processed.length} creators with contact info`,
   );
   writeData(
-    path.join(intermediaryPath, "08_final_with_contact.json"),
+    path.join(intermediaryPath, "09_final_with_contact.json"),
     JSON.stringify(processed, null, 2),
   );
 

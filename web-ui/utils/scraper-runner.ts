@@ -12,6 +12,7 @@ interface ScraperConfig {
 
   // First pass filters
   minFollowers: number;
+  maxFollowers: number;
 
   // Second pass filters
   removeNonEnglish: boolean;
@@ -62,6 +63,8 @@ export class ScraperRunner {
         config.removeNonEnglish.toString(),
         "--minFollowers",
         config.minFollowers.toString(),
+        "--maxFollowers",
+        config.maxFollowers.toString(),
         "--minVideoViews",
         config.minVideoViews.toString(),
         "--minAvgViews",

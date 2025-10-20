@@ -8,4 +8,5 @@ export interface GoodQuality
 
 export type rowAndPass =
   | { pass: 1; row: AuthorMeta }
-  | { pass: 2; row: ProfileItem };
+  | { pass: 2; row: AuthorMeta }
+  | { pass: 3; row: ProfileItem };

@@ -47,6 +47,7 @@ interface ScraperConfig {
 
   // First pass filters
   minFollowers: number;
+  maxFollowers: number;
 
   // Second pass filters
   removeNonEnglish: boolean;
@@ -106,13 +107,14 @@ export function ScraperControl() {
   const [config, setConfig] = useState<ScraperConfig>({
     // Basic config
     // limitPerQuery: 380,
-    limitPerQuery: 20,
+    limitPerQuery: 350,
     query: [],
     type: "hashtag",
     provider: "clockworks",
 
     // First pass filters
     minFollowers: 1000,
+    maxFollowers: 10000000,
 
     // Second pass filters
     removeNonEnglish: true,
@@ -120,7 +122,7 @@ export function ScraperControl() {
     // Aggregation pass
     minVideoViews: 10000,
     minAvgViews: 15000,
-    minNoOfVideosInWindow: 3,
+    minNoOfVideosInWindow: 5,
 
     // Direct to apify
     videoLimitPerProfile: 5,
@@ -684,7 +686,7 @@ export function ScraperControl() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">
                   Min Followers
@@ -698,6 +700,24 @@ export function ScraperControl() {
                     setConfig((prev) => ({
                       ...prev,
                       minFollowers: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">
+                  Max Followers
+                </label>
+                <input
+                  type="number"
+                  className="w-full px-2 py-1.5 text-sm border border-slate-300 rounded focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
+                  min="0"
+                  value={config.maxFollowers}
+                  onChange={(e) =>
+                    setConfig((prev) => ({
+                      ...prev,
+                      maxFollowers: parseInt(e.target.value) || 0,
                     }))
                   }
                   required

@@ -73,6 +73,17 @@ program
     },
   )
   .requiredOption(
+    "--maxFollowers <number>",
+    "maximum number of followers",
+    (value) => {
+      const parsed = parseInt(value, 10);
+      if (isNaN(parsed) || parsed < 0) {
+        throw new Error("maxFollowers must be a non-negative integer");
+      }
+      return parsed;
+    },
+  )
+  .requiredOption(
     "--minVideoViews <number>",
     "minimum video views",
     (value) => {

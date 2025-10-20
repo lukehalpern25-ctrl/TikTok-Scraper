@@ -17,14 +17,14 @@ export async function scrapeProfile(
 
   if (qualityConfig.provider === "apidojo") {
     console.log(
-      `APIDojo profile scraper configured - ${profiles.length} profiles, ${qualityConfig.videoLimitPerProfile} videos per profile`,
+      `APIDojo profile scraper configured - ${profiles.length} profiles, 5 videos per profile`,
     );
 
     // Use APIDojo batch request
     const batchResult = await apiDojoBatchRequest(client, {
       actorId: "apidojo/tiktok-profile-scraper",
       queries: profiles,
-      maxItems: qualityConfig.videoLimitPerProfile,
+      maxItems: 5,
       batchSize: 7,
       isProfile: true,
     });
@@ -42,7 +42,7 @@ export async function scrapeProfile(
   } else {
     // Base scraper config (without profiles)
     const baseConfig = {
-      resultsPerPage: qualityConfig.videoLimitPerProfile,
+      resultsPerPage: 5,
       shouldDownloadCovers: false,
       shouldDownloadSlideshowImages: false,
       shouldDownloadSubtitles: false,
@@ -51,7 +51,7 @@ export async function scrapeProfile(
     };
 
     console.log(
-      `Clockworks profile scraper configured - ${profiles.length} profiles, ${qualityConfig.videoLimitPerProfile} videos per profile`,
+      `Clockworks profile scraper configured - ${profiles.length} profiles, 5 videos per profile`,
     );
 
     // Use clockworks batch request utility

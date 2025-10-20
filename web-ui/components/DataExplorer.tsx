@@ -59,23 +59,28 @@ export function DataExplorer() {
       count: 0,
     },
     {
+      name: "Filter by maximum followers",
+      file: "05_max_followers_filtered",
+      count: 0,
+    },
+    {
       name: "Expand profiles with full data",
-      file: "05_expanded_profiles",
+      file: "06_expanded_profiles",
       count: 0,
     },
     {
       name: "Remove non-English creators",
-      file: "06_english_creators_only",
+      file: "07_english_creators_only",
       count: 0,
     },
     {
       name: "Filter by video metrics",
-      file: "07_video_metrics_filtered",
+      file: "08_video_metrics_filtered",
       count: 0,
     },
     {
       name: "Filter creators with contact info",
-      file: "08_final_with_contact",
+      file: "09_final_with_contact",
       count: 0,
     },
   ];
@@ -234,25 +239,15 @@ export function DataExplorer() {
     if (!stepData.length) return;
 
     const headers = [
-      "Name",
-      "Username",
-      "Followers",
-      "Videos",
-      "Verified",
-      "Bio Link",
-      "Signature",
+      "Profile URL",
+      "Original Video URL",
     ];
     const csvContent = [
       headers.join(","),
       ...stepData.map((item) =>
         [
-          item.authorMeta?.nickName || "",
-          item.authorMeta?.name || "",
-          item.authorMeta?.fans || 0,
-          item.authorMeta?.video || 0,
-          item.authorMeta?.verified || false,
-          item.authorMeta?.bioLink || "",
-          `"${(item.authorMeta?.signature || "").replace(/"/g, '""')}"`,
+          item.authorMeta?.profileUrl || "",
+          item.webVideoUrl || "",
         ].join(","),
       ),
     ].join("\n");

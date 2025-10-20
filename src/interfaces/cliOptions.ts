@@ -9,6 +9,7 @@ export interface CliOptions {
 
   // first pass filters
   minFollowers: number;
+  maxFollowers: number;
 
   // second pass filters
   removeNonEnglish: boolean;

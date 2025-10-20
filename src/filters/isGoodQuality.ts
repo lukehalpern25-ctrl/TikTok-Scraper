@@ -3,7 +3,7 @@ import type { ProfileItem } from "../interfaces/profile";
 import type { GoodQuality, rowAndPass } from "../interfaces/qualityDeterminant";
 
 function pass1IsGood(row: AuthorMeta, config: GoodQuality) {
-  // check followers count
+  // check minimum followers count
   if (row.fans < config.minFollowers) {
     console.log(
       `Quality check pass 1 failed: ${row.fans} followers < ${config.minFollowers} required`,
@@ -15,15 +15,28 @@ function pass1IsGood(row: AuthorMeta, config: GoodQuality) {
   return true;
 }
 
-function pass2IsGood(row: ProfileItem, config: GoodQuality) {
-  if (config.removeNonEnglish && (row.textLanguage !== "en" && row.textLanguage !== "un")) {
+function pass2IsGood(row: AuthorMeta, config: GoodQuality) {
+  // check maximum followers count
+  if (row.fans > config.maxFollowers) {
     console.log(
-      `Quality check pass 2 failed: expected languages 'en' received ${row.textLanguage}`,
+      `Quality check pass 2 failed: ${row.fans} followers > ${config.maxFollowers} maximum`,
     );
     return false;
   }
 
   console.log("Quality check 2 passed");
+  return true;
+}
+
+function pass3IsGood(row: ProfileItem, config: GoodQuality) {
+  if (config.removeNonEnglish && (row.textLanguage !== "en" && row.textLanguage !== "un")) {
+    console.log(
+      `Quality check pass 3 failed: expected languages 'en' received ${row.textLanguage}`,
+    );
+    return false;
+  }
+
+  console.log("Quality check 3 passed");
   return true;
 }
 
@@ -34,6 +47,8 @@ export function isGoodQuality(config: GoodQuality, rowAndPass: rowAndPass) {
       return pass1IsGood(rowAndPass.row, config);
     case 2:
       return pass2IsGood(rowAndPass.row, config);
+    case 3:
+      return pass3IsGood(rowAndPass.row, config);
     default:
       throw new Error("Undefined pass");
   }

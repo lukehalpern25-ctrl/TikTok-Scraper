@@ -14,7 +14,7 @@ const creatorRoutes = new CreatorRoutes();
 const staticRoutes = new StaticRoutes();
 
 const server = Bun.serve({
-  port: 3000,
+  port: 3002,
   async fetch(req, server) {
     const url = new URL(req.url);
 

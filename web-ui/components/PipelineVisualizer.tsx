@@ -51,26 +51,31 @@ export function PipelineVisualizer({
     {
       name: "Filter by minimum followers",
       file: "04_min_followers_filtered",
-      description: "Filter by minimum followers and video count",
+      description: "Filter by minimum follower count",
+    },
+    {
+      name: "Filter by maximum followers",
+      file: "05_max_followers_filtered",
+      description: "Filter by maximum follower count",
     },
     {
       name: "Expand profiles with full data",
-      file: "05_expanded_profiles",
+      file: "06_expanded_profiles",
       description: "Fetch additional profile data and recent videos",
     },
     {
       name: "Remove non-English creators",
-      file: "06_english_creators_only",
+      file: "07_english_creators_only",
       description: "Filter out non-English speaking creators",
     },
     {
       name: "Filter by video metrics",
-      file: "07_video_metrics_filtered",
+      file: "08_video_metrics_filtered",
       description: "Apply video count and view metrics quality filters",
     },
     {
       name: "Filter creators with contact info",
-      file: "08_final_with_contact",
+      file: "09_final_with_contact",
       description: "Keep only creators with bio links or contact information",
     },
   ];
